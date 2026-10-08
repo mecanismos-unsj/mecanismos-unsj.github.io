@@ -1,0 +1,41 @@
+SITIO DE LA CÁTEDRA DE MECANISMOS — FI-UNSJ
+Materias: Mecanismos (Ing. Mecánica) y Mecánica del Cuerpo Rígido (Ing. Industrial)
+Desarrollo: Ing. Manuel Galdeano Ruiz
+
+CÓMO ESTÁ ARMADO
+  index.html, programa.html, unidad.html, apuntes.html, herramientas.html, glosario.html
+      Páginas del sitio. No hace falta tocarlas.
+  assets/datos.js
+      TODO el contenido: datos de la cátedra, unidades, apuntes, herramientas y glosario.
+      Es el único archivo que se edita para mantener el sitio.
+  assets/site.css, assets/site.js
+      Diseño y armado de las páginas. No hace falta tocarlos.
+  apuntes/
+      Los PDF de los apuntes.
+  herramientas/
+      MECALAB, CONTACTLAB y las herramientas que se agreguen.
+
+AGREGAR UN APUNTE
+  1. Subí el PDF a la carpeta "apuntes" (por ejemplo: apuntes/u3-velocidades.pdf).
+  2. En assets/datos.js, dentro de APUNTES, agregá una línea:
+     { titulo: "Velocidades por polígonos", materia: "mecanismos", unidad: 3, archivo: "apuntes/u3-velocidades.pdf", tipo: "PDF", paginas: 18 },
+     materia puede ser "mecanismos", "mcr" (Mecánica del Cuerpo Rígido) o "ambas".
+  El apunte aparece solo en la página Apuntes y en la página de esa unidad.
+
+ACTUALIZAR UNA HERRAMIENTA
+  Reemplazá el archivo en la carpeta "herramientas" manteniendo el mismo nombre
+  (mecalab.html o contactlab.html).
+
+ENLACE AL AULA VIRTUAL
+  En assets/datos.js, en MATERIAS, completá  moodle: ""  de cada materia con la
+  dirección exacta de su aula. El botón general usa la línea moodle de SITIO.
+
+PARCIALES CON MECALAB (MODO PARCIAL)
+  Enlace para el cuestionario de Moodle (cambiá PIP1 por el nombre del parcial):
+     https://<dirección-del-sitio>/herramientas/mecalab.html?parcial=PIP1
+  En modo parcial MECALAB solo permite: dibujar el mecanismo (con la imagen del
+  problema de fondo), trazar polígonos de velocidades y aceleraciones y escribir
+  las ecuaciones. Quedan ocultos: síntesis, CI, gráficas, animación y trayectorias.
+  El alumno pega la imagen del problema con Ctrl+V, completa nombre y registro,
+  trabaja en pantalla completa y al final genera el PDF, que sube a Moodle.
+  Las preguntas teóricas y los resultados numéricos van en el cuestionario de Moodle.
