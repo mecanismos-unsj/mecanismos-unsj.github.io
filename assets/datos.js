@@ -195,7 +195,7 @@ const HERRAMIENTAS = [
    archivo: ruta al PDF dentro de /apuntes                                  */
 const APUNTES = [
   { titulo: "Planificación 2026 — Mecanismos", materia: "mecanismos", unidad: 0, archivo: "apuntes/planificacion-mecanismos-2026.pdf", tipo: "PDF", paginas: 10 },
-  { titulo: "Planificación 2026 — Mecánica del Cuerpo Rígido", materia: "mcr", unidad: 0, archivo: "apuntes/planificacion-mcr-2026.pdf", tipo: "PDF", paginas: 9 }
+  { titulo: "Planificación 2026 — Mecánica del Cuerpo Rígido", materia: "mcr", unidad: 0, archivo: "apuntes/planificacion-mcr-2026.pdf", tipo: "PDF", paginas: 9 },
   { titulo: "Cinematica - Análisis de velocidad en Mecanismos", materia: "mecanismos", unidad: 3, archivo: "apuntes/MAP_velocidad.pptx", tipo: "PPT", paginas: 27 },
   { titulo: "Cinematica - Análisis de aceleracion en Mecanismos", materia: "mecanismos", unidad: 3, archivo: "apuntes/MAP_aceleracion.pptx", tipo: "PPT", paginas: 16 },
   { titulo: "Cinematica - Análisis de posicion en Mecanismos", materia: "mecanismos", unidad: 3, archivo: "apuntes/MAP_posicion.pptx", tipo: "PPT", paginas: 28 },
