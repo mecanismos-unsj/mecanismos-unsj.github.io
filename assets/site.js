@@ -5,6 +5,11 @@
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const main = $("#main");
+  if (typeof MATERIAS === "undefined" || typeof GLOSARIO === "undefined" || typeof HERRAMIENTAS === "undefined" || typeof APUNTES === "undefined") {
+    document.body.style.cssText = "font-family:system-ui,sans-serif;padding:24px;max-width:640px;margin:auto;line-height:1.5";
+    if (main) main.innerHTML = '<h1 style="font-size:22px">El sitio no pudo cargar sus datos</h1><p>Hay un error de escritura en el archivo <b>assets/datos.js</b>, casi siempre una coma o unas comillas que faltan en la última línea que se editó. Revisá que cada línea <code>{ ... }</code> termine en coma.</p><p>Para ver la línea exacta: F12 → pestaña Console.</p>';
+    return;
+  }
   const page = main ? main.dataset.page : "";
   const toolById = id => HERRAMIENTAS.find(h => h.id === id);
   const termById = id => GLOSARIO.find(g => g.id === id);
