@@ -196,8 +196,14 @@ const HERRAMIENTAS = [
 const APUNTES = [
   { titulo: "Planificación 2026 — Mecanismos", materia: "mecanismos", unidad: 0, archivo: "apuntes/planificacion-mecanismos-2026.pdf", tipo: "PDF", paginas: 10 },
   { titulo: "Planificación 2026 — Mecánica del Cuerpo Rígido", materia: "mcr", unidad: 0, archivo: "apuntes/planificacion-mcr-2026.pdf", tipo: "PDF", paginas: 9 }
-  { titulo: "Análisis de velocidades en Mecanismos", materia: "mecanismos", unidad: 1, archivo: "apuntes/MAP_velocidad.pptx", tipo: "PPT", paginas: 27 },
-   // Ejemplo para agregar un apunte:
+  { titulo: "Cinematica - Análisis de velocidad en Mecanismos", materia: "mecanismos", unidad: 3, archivo: "apuntes/MAP_velocidad.pptx", tipo: "PPT", paginas: 27 },
+  { titulo: "Cinematica - Análisis de aceleracion en Mecanismos", materia: "mecanismos", unidad: 3, archivo: "apuntes/MAP_aceleracion.pptx", tipo: "PPT", paginas: 16 },
+  { titulo: "Cinematica - Análisis de posicion en Mecanismos", materia: "mecanismos", unidad: 3, archivo: "apuntes/MAP_posicion.pptx", tipo: "PPT", paginas: 28 },
+  { titulo: "Cinematica - Ejercicios resueltos en forma grafica y analitica de Mecanismos", materia: "mecanismos", unidad: 3, archivo: "apuntes/MAP_ejercicios.pdf", tipo: "PDF", paginas: 30 },
+  { titulo: "Diseño de Levas", materia: "mecanismos", unidad: 6, archivo: "apuntes/Levas_v211123.pdf", tipo: "Pdf", paginas: 63 },
+  { titulo: "Dinamica en Mecanismos", materia: "mecanismos", unidad: 4, archivo: "apuntes/Dinamica_MAP.pdf", tipo: "PDF", paginas: 38 },
+  { titulo: "Transmision de movimiento por contacto directo entre superficies", materia: "mecanismos", unidad: 5, archivo: "apuntes/Contacto_Directo.pdf", tipo: "Pdf", paginas: 49 },
+// Ejemplo para agregar un apunte:
   // { titulo: "Velocidades por polígonos", materia: "mecanismos", unidad: 3, archivo: "apuntes/u3-velocidades.pdf", tipo: "PDF", paginas: 18 },
 ];
 
