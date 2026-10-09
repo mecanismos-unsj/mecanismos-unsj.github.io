@@ -203,7 +203,10 @@ const APUNTES = [
   { titulo: "Diseño de Levas", materia: "mecanismos", unidad: 6, archivo: "apuntes/Levas_v211123.pdf", tipo: "Pdf", paginas: 63 },
   { titulo: "Dinamica en Mecanismos", materia: "mecanismos", unidad: 4, archivo: "apuntes/Dinamica_MAP.pdf", tipo: "PDF", paginas: 38 },
   { titulo: "Transmision de movimiento por contacto directo entre superficies", materia: "mecanismos", unidad: 5, archivo: "apuntes/Contacto_Directo.pdf", tipo: "Pdf", paginas: 49 },
-// Ejemplo para agregar un apunte:
+  { titulo: "Transmision de movimiento por contacto directo entre superficies PPT", materia: "mecanismos", unidad: 5, archivo: "apuntes/Contacto_Directo_PPT.pdf", tipo: "Pdf", paginas: 42 },
+  { titulo: "Geometria en Mecanismos", materia: "mecanismos", unidad: 1, archivo: "apuntes/Diseño_MAP.pdf", tipo: "Pdf", paginas: 56 },
+  { titulo: "Sintesis Grafica en Mecanismos", materia: "mecanismos", unidad: 2, archivo: "apuntes/Sintesis_Grafica.pdf", tipo: "Pdf", paginas: 30 },
+   // Ejemplo para agregar un apunte:
   // { titulo: "Velocidades por polígonos", materia: "mecanismos", unidad: 3, archivo: "apuntes/u3-velocidades.pdf", tipo: "PDF", paginas: 18 },
 ];
 
