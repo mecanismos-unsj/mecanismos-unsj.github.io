@@ -196,7 +196,8 @@ const HERRAMIENTAS = [
 const APUNTES = [
   { titulo: "Planificación 2026 — Mecanismos", materia: "mecanismos", unidad: 0, archivo: "apuntes/planificacion-mecanismos-2026.pdf", tipo: "PDF", paginas: 10 },
   { titulo: "Planificación 2026 — Mecánica del Cuerpo Rígido", materia: "mcr", unidad: 0, archivo: "apuntes/planificacion-mcr-2026.pdf", tipo: "PDF", paginas: 9 }
-  // Ejemplo para agregar un apunte:
+  { titulo: "Análisis de velocidades en Mecanismos", materia: "mecanismos", unidad: 1, archivo: "apuntes/MAP_velocidad.pptx", tipo: "PPT", paginas: 27 },
+   // Ejemplo para agregar un apunte:
   // { titulo: "Velocidades por polígonos", materia: "mecanismos", unidad: 3, archivo: "apuntes/u3-velocidades.pdf", tipo: "PDF", paginas: 18 },
 ];
 
