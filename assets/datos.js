@@ -10,7 +10,8 @@
    - Para agregar una herramienta: copiá el HTML a /herramientas y sumá
      un bloque en HERRAMIENTAS.
    - Para agregar un término al glosario: sumá un bloque en GLOSARIO.
-   Respetá las comas y comillas: cada bloque { ... } termina en coma.
+   Respetá las comas y comillas: TODAS las líneas { ... } terminan en coma,
+   incluso la última de cada lista.
    ===================================================================== */
 
 const SITIO = {
@@ -186,6 +187,20 @@ const HERRAMIENTAS = [
     unidades: { mecanismos: [5, 6], mcr: [3] },
     descripcion: "Láminas interactivas de transmisión por contacto: ley general del contacto, ruedas y conos de fricción, evolvente y dentado de engranajes, trenes de engranajes y levas, con lectura de valores en vivo y modo práctica.",
     funciones: ["Ley general del contacto", "Ruedas y conos de fricción", "Evolvente, dentado e interferencia", "Trenes de engranajes", "Levas: construcción, SVA y cinética", "Modo práctica"],
+    nota: "" },
+  { id: "mulab", nombre: "μLAB", marca: ["μ", "LAB"],
+    lema: "Frenos y embragues",
+    archivo: "herramientas/mulab.html",
+    unidades: { mcr: [4] },
+    descripcion: "Frenos y embragues de fricción paso a paso: zapata corta, zapatas largas (Simplex y Duplex), frenos de cinta simple y diferencial, embrague y freno de disco, y calor generado. Muestra en colores si el freno es autoenergizante, no autoenergizante o autoblocante.",
+    funciones: ["Zapata corta y zapatas largas", "Ley de presiones y detalle de un punto", "Simplex y Duplex", "Freno de cinta (teorema de Prony)", "Embrague y freno de disco", "Calor generado y materiales"],
+    nota: ""},
+  { id: "dinalab", nombre: "DINALAB", marca: ["DINA", "LAB"],
+    lema: "Dinámica de eslabonamientos",
+    archivo: "herramientas/dinalab.html",
+    unidades: { mecanismos: [4], mcr: [1, 2] },
+    descripcion: "Cinetostática de mecanismos planos: fuerzas en todos los pares y par motor, planteando ΣF = m·a y ΣT = I_G·α para cada eslabón y resolviendo [A]·[B] = [C]. Muestra el mecanismo armado o despiezado en cuerpos libres y las matrices completas, con unidades SI o técnicas para seguir los ejemplos del apunte.",
+    funciones: ["Fundamentos: propiedades de masa, método del péndulo y d'Alembert", "Eslabón en rotación pura (Ejemplo 1)", "Manivela-corredera de 3 barras con fricción (Ejemplo 2)", "Cuadrilátero articulado: sistema de 9 × 9", "Manivela-corredera de 4 barras (pistón)", "Volantes: diagrama par–ángulo y dimensionamiento"],
     nota: "" }
 ];
 
@@ -196,17 +211,7 @@ const HERRAMIENTAS = [
 const APUNTES = [
   { titulo: "Planificación 2026 — Mecanismos", materia: "mecanismos", unidad: 0, archivo: "apuntes/planificacion-mecanismos-2026.pdf", tipo: "PDF", paginas: 10 },
   { titulo: "Planificación 2026 — Mecánica del Cuerpo Rígido", materia: "mcr", unidad: 0, archivo: "apuntes/planificacion-mcr-2026.pdf", tipo: "PDF", paginas: 9 },
-  { titulo: "Cinematica - Análisis de velocidad en Mecanismos", materia: "mecanismos", unidad: 3, archivo: "apuntes/MAP_velocidad.pptx", tipo: "PPT", paginas: 27 },
-  { titulo: "Cinematica - Análisis de aceleracion en Mecanismos", materia: "mecanismos", unidad: 3, archivo: "apuntes/MAP_aceleracion.pptx", tipo: "PPT", paginas: 16 },
-  { titulo: "Cinematica - Análisis de posicion en Mecanismos", materia: "mecanismos", unidad: 3, archivo: "apuntes/MAP_posicion.pptx", tipo: "PPT", paginas: 28 },
-  { titulo: "Cinematica - Ejercicios resueltos en forma grafica y analitica de Mecanismos", materia: "mecanismos", unidad: 3, archivo: "apuntes/MAP_ejercicios.pdf", tipo: "PDF", paginas: 30 },
-  { titulo: "Diseño de Levas", materia: "mecanismos", unidad: 6, archivo: "apuntes/Levas_v211123.pdf", tipo: "Pdf", paginas: 63 },
-  { titulo: "Dinamica en Mecanismos", materia: "mecanismos", unidad: 4, archivo: "apuntes/Dinamica_MAP.pdf", tipo: "PDF", paginas: 38 },
-  { titulo: "Transmision de movimiento por contacto directo entre superficies", materia: "mecanismos", unidad: 5, archivo: "apuntes/Contacto_Directo.pdf", tipo: "Pdf", paginas: 49 },
-  { titulo: "Transmision de movimiento por contacto directo entre superficies PPT", materia: "mecanismos", unidad: 5, archivo: "apuntes/Contacto_Directo_PPT.pdf", tipo: "Pdf", paginas: 42 },
-  { titulo: "Geometria en Mecanismos", materia: "mecanismos", unidad: 1, archivo: "apuntes/Diseño_MAP.pdf", tipo: "Pdf", paginas: 56 },
-  { titulo: "Sintesis Grafica en Mecanismos", materia: "mecanismos", unidad: 2, archivo: "apuntes/Sintesis_Grafica.pdf", tipo: "Pdf", paginas: 30 },
-   // Ejemplo para agregar un apunte:
+  // Ejemplo para agregar un apunte:
   // { titulo: "Velocidades por polígonos", materia: "mecanismos", unidad: 3, archivo: "apuntes/u3-velocidades.pdf", tipo: "PDF", paginas: 18 },
 ];
 
@@ -295,10 +300,22 @@ const GLOSARIO = [
     f: "a_c = 2·ω × v_rel",
     d: "Componente de aceleración que aparece cuando un punto se desliza sobre un eslabón que gira. Es perpendicular a la velocidad relativa de deslizamiento, y su sentido se obtiene girando v_rel 90° en el sentido de ω. Es clave en mecanismos con corredera oscilante.",
     ver: ["poligono-de-aceleraciones"] },
-  { id: "dalembert", t: "Principio de d'Alembert", u: 4, mcr: 1,
+  { id: "dalembert", t: "Principio de d'Alembert", u: 4, mcr: 1, app: "dinalab",
     f: "F_i = −m·a_G   ·   M_i = −I_G·α",
     d: "Permite tratar un problema dinámico como uno estático, agregando a cada eslabón una fuerza de inercia opuesta a la aceleración de su centro de masa y una cupla de inercia opuesta a su aceleración angular.",
     ver: ["masas-equivalentes", "volante"] },
+  { id: "cinetostatica", t: "Cinetostática (dinámica inversa)", u: 4, mcr: 2, app: "dinalab",
+    f: "ΣF = m·a_G   ·   ΣT = I_G·α   →   [A]·[B] = [C]",
+    d: "Cálculo de las fuerzas en los pares y del par motor necesarios para que un mecanismo tenga el movimiento ya conocido por la cinemática. Se plantean tres ecuaciones por eslabón móvil y se resuelven simultáneamente: [A] contiene la geometría, [B] las incógnitas y [C] la dinámica.",
+    ver: ["dalembert", "momento-de-inercia", "volante"] },
+  { id: "momento-de-inercia", t: "Momento de inercia de masa", u: 4, mcr: 1, app: "dinalab",
+    f: "I_ZZ = I_GG + m·d²   ·   I_ZZ = W·r·(τ/2π)²",
+    d: "Medida de la resistencia de un cuerpo a la aceleración angular. Se obtiene descomponiendo la pieza en formas simples y trasladando cada inercia con el teorema de Steiner, o experimentalmente haciéndola oscilar como péndulo y midiendo el período τ.",
+    ver: ["radio-de-giro", "cinetostatica"] },
+  { id: "radio-de-giro", t: "Radio de giro", u: 4, mcr: 1, app: "dinalab",
+    f: "k = √(I_ZZ / m)",
+    d: "Distancia a la que habría que concentrar toda la masa del cuerpo para obtener el mismo momento de inercia respecto del eje. Siempre es mayor que la distancia al centro de gravedad.",
+    ver: ["momento-de-inercia"] },
   { id: "circulo-de-rozamiento", t: "Círculo de rozamiento", u: 4, mcr: 0,
     f: "ρ = r·sen φ ≈ μ·r",
     d: "En una articulación con rozamiento, la reacción entre perno y buje deja de pasar por el centro y queda tangente a un círculo de radio ρ, donde r es el radio del perno y φ el ángulo de rozamiento. La reacción se ubica del lado que se opone al giro relativo.",
@@ -306,7 +323,7 @@ const GLOSARIO = [
   { id: "masas-equivalentes", t: "Masas equivalentes", u: 4, mcr: 0,
     d: "Método que reemplaza un eslabón por masas concentradas en algunos de sus puntos, de modo que conserven la masa total, la posición del centro de masa y, si se busca equivalencia dinámica completa, el momento de inercia. Simplifica el cálculo de fuerzas de inercia, por ejemplo en la biela de un motor.",
     ver: ["dalembert"] },
-  { id: "volante", t: "Volante", u: 4, mcr: 0,
+  { id: "volante", t: "Volante", u: 4, mcr: 0, app: "dinalab",
     f: "I = ΔE / (δ·ω²_med)   ·   δ = (ω_max − ω_min)/ω_med",
     d: "Rueda de gran inercia que almacena y devuelve energía para limitar las variaciones cíclicas de velocidad de una máquina. Se dimensiona a partir de la máxima fluctuación de energía ΔE en el ciclo y del coeficiente de fluctuación δ admisible.",
     ver: ["dalembert"] },
@@ -371,11 +388,11 @@ const GLOSARIO = [
     f: "i = z₂ / z₁",
     d: "Transmisión por eslabones articulados que engranan en ruedas dentadas (piñones). No desliza, por lo que la relación de transmisión media es exacta e igual al cociente entre números de dientes. Como la cadena se apoya en un polígono y no en un círculo, la velocidad de salida fluctúa levemente: es el efecto poligonal, que disminuye con más dientes.",
     ver: ["transmision-por-correa"] },
-  { id: "freno-de-zapata", t: "Freno de zapata", u: 0, mcr: 4,
+  { id: "freno-de-zapata", t: "Freno de zapata", u: 0, mcr: 4, app: "mulab",
     f: "T = μ·N·r",
     d: "Freno en el que una zapata con material de fricción se presiona contra un tambor. Para una zapata corta, el par de frenado es el producto del coeficiente de rozamiento μ, la fuerza normal N y el radio del tambor r. Según hacia dónde gire el tambor respecto del pivote, el rozamiento puede ayudar a apretar la zapata (efecto autoenergizante) o a separarla.",
     ver: ["embrague-de-disco"] },
-  { id: "embrague-de-disco", t: "Embrague de disco", u: 0, mcr: 4,
+  { id: "embrague-de-disco", t: "Embrague de disco", u: 0, mcr: 4, app: "mulab",
     f: "T = μ·F·(R + r)/2   (desgaste uniforme, por cara)",
     d: "Acoplamiento por fricción entre discos que se aprietan axialmente con una fuerza F, para conectar o desconectar dos ejes en marcha. El par que transmite cada cara depende de los radios exterior R e interior r; la hipótesis de desgaste uniforme, válida para embragues usados, da la expresión indicada.",
     ver: ["freno-de-zapata", "junta-universal"] },
