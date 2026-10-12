@@ -209,6 +209,21 @@ const HERRAMIENTAS = [
     nota: "" }
 ];
 
+/* ---------- CLASES GRABADAS ----------
+   Una línea por lista de reproducción de YouTube.
+   materia: "mecanismos" o "mcr"
+   titulo:  cómo se muestra la edición (por ejemplo "Edición 2024")
+   nota:    aclaración opcional (por ejemplo, el nombre anterior de la materia)
+   lista:   pegá el enlace completo de la lista de YouTube (o solo su código PL...)
+   Se muestran en el orden en que están escritas: conviene poner primero la más nueva.
+   La lista tiene que estar como "Pública" u "Oculta" (no "Privada").            */
+const CLASES = [
+  { materia: "mecanismos", titulo: "Clases grabadas", nota: "", lista: "https://youtube.com/playlist?list=PL58li_oeG7qqI6Tz1aDgoy_ilSkBDDQdD" },
+  { materia: "mcr", titulo: "Clases grabadas", nota: "", lista: "https://youtube.com/playlist?list=PL58li_oeG7qquLRpG1IZeBshahWDEqLWn" }
+  // Para sumar otra lista de la misma materia, agregá una línea como esta (con coma en la línea anterior):
+  // { materia: "mcr", titulo: "Edición 2023", nota: "Como Mecánica Racional y Mecanismos", lista: "https://youtube.com/playlist?list=..." }
+];
+
 /* ---------- APUNTES ----------
    materia: "mecanismos", "mcr" o "ambas"
    unidad:  número de unidad de esa materia (0 = material general)
