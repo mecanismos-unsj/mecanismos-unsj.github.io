@@ -37,12 +37,12 @@
   /* ---------- Barra superior y pie ---------- */
   const NAV = [
     ["inicio", "index.html", "Inicio"],
-    ["programa", "programa.html", "Programas"],
     ["apuntes", "apuntes.html", "Apuntes"],
+    ["clases", "clases.html", "Clases"],
     ["herramientas", "herramientas.html", "Herramientas"],
     ["glosario", "glosario.html", "Glosario"]
   ];
-  const navPage = page === "unidad" ? "programa" : page;
+  const navPage = (page === "unidad" || page === "programa") ? "apuntes" : page;
   const header = document.createElement("header");
   header.className = "top";
   header.innerHTML = `<div class="wrap">
@@ -100,6 +100,11 @@
     }));
   };
 
+  /* Subsecciones dentro de Apuntes: apuntes de la materia / programa y cronograma */
+  const subTabs = (mid, cur) => `<nav class="subtabs" aria-label="Secciones de la materia">
+      <a href="apuntes.html#${mid}"${cur === "apuntes" ? ' aria-current="page"' : ""}>Apuntes</a>
+      <a href="programa.html#${mid}"${cur === "programa" ? ' aria-current="page"' : ""}>Programa y cronograma</a></nav>`;
+
   /* ---------- Páginas ---------- */
   const PAGES = {
     inicio() {
@@ -127,7 +132,7 @@
             <p class="muted">${esc(m.descripcion)}</p>
             <dl class="cmeta"><div><dt>Semestre</dt><dd>${esc(m.semestre)}</dd></div><div><dt>Código</dt><dd>${esc(m.codigo)}</dd></div><div><dt>Plan</dt><dd>${esc(m.plan)}</dd></div><div><dt>Carga</dt><dd>${esc(m.cargaTotal)}</dd></div></dl>
             <ol class="cunits">${m.unidades.map(u => `<li><a href="${unitLink(m.id, u.n)}"><span class="mono">U${u.n}</span>${esc(u.corto)}</a></li>`).join("")}</ol>
-            <div class="cta"><a class="btn primary" data-m="${m.id}" href="programa.html#${m.id}">Programa</a><a class="btn" data-m="${m.id}" href="apuntes.html#${m.id}">Apuntes</a><a class="btn" data-m="${m.id}" href="${esc(aula(m))}" target="_blank" rel="noopener">Aula virtual ↗</a></div>
+            <div class="cta"><a class="btn primary" data-m="${m.id}" href="apuntes.html#${m.id}">Apuntes</a><a class="btn" data-m="${m.id}" href="clases.html#${m.id}">Clases</a><a class="btn" data-m="${m.id}" href="${esc(aula(m))}" target="_blank" rel="noopener">Aula virtual ↗</a></div>
           </article>`).join("")}</div>
         </section>
         <section class="section">
@@ -154,8 +159,8 @@
         syncAula(mid);
         const hasWeeks = m.semanas && m.unidades.every(u => u.semanas);
         const weeks = Array.from({ length: m.semanas || 0 }, (_, i) => i + 1);
-        main.innerHTML = pageHead("Programas " + SITIO.anio, "Programa analítico", "", switcher(mid)) + `
-        <div class="wrap">
+        main.innerHTML = pageHead("Apuntes · " + SITIO.anio, "Programa y cronograma", "", switcher(mid)) + `
+        <div class="wrap">${subTabs(mid, "programa")}
           <section class="section">
             <div class="sec-head"><h2>${esc(m.nombre)}</h2></div>
             <dl class="datasheet" style="margin:0">
@@ -241,11 +246,37 @@
         syncAula(mid);
         const ofM = a => a.materia === mid || a.materia === "ambas";
         main.innerHTML = pageHead("Material de estudio", "Apuntes", "Apuntes desarrollados por la cátedra, ordenados por unidad.", switcher(mid)) + `
-        <div class="wrap"><section class="section">${groups.map(g => {
+        <div class="wrap">${subTabs(mid, "apuntes")}<section class="section">${groups.map(g => {
           const docs = APUNTES.filter(a => ofM(a) && a.unidad === g.n);
           return `<div class="doc-group"><h3>${g.n ? `<span class="mono">U${g.n}</span><a href="${unitLink(mid, g.n)}" style="text-decoration:none">${esc(g.titulo)}</a>` : esc(g.titulo)}</h3>
             ${docs.length ? `<ul class="docs">${docs.map(docItem).join("")}</ul>` : `<p class="empty">Todavía no hay apuntes cargados.</p>`}</div>`;
         }).join("")}</section></div>`;
+        bindSwitch(render);
+      };
+      render(currentMateria());
+    },
+
+    clases() {
+      const LISTAS = typeof CLASES === "undefined" ? [] : CLASES;
+      const listId = v => { const s = String(v || "").trim(); const m = s.match(/[?&]list=([\w-]+)/); return m ? m[1] : (/^[\w-]{10,}$/.test(s) ? s : ""); };
+      let edicion = {};
+      const render = mid => {
+        const m = mat(mid);
+        document.title = `Clases grabadas de ${m.nombre} · Cátedra Mecanismos`;
+        syncAula(mid);
+        const eds = LISTAS.filter(c => c.materia === mid);
+        let i = Math.min(edicion[mid] || 0, Math.max(0, eds.length - 1));
+        const cur = eds[i], id = cur ? listId(cur.lista) : "";
+        main.innerHTML = pageHead("Material de estudio", "Clases grabadas", "Grabaciones de las clases de ediciones anteriores, para repasar o recuperar un tema.", switcher(mid)) + `
+        <div class="wrap"><section class="section">
+          ${eds.length ? `<div class="sec-head"><h2>${esc(m.nombre)}</h2>${id ? `<a href="https://www.youtube.com/playlist?list=${esc(id)}" target="_blank" rel="noopener">Abrir en YouTube ↗</a>` : ""}</div>
+          ${eds.length > 1 ? `<div class="eds" role="group" aria-label="Edición">${eds.map((c, k) => `<button type="button" data-i="${k}" aria-pressed="${k === i}"><b>${esc(c.titulo)}</b>${c.nota ? `<span>${esc(c.nota)}</span>` : ""}</button>`).join("")}</div>` : ""}
+          ${id ? `<div class="player"><iframe src="https://www.youtube-nocookie.com/embed/videoseries?list=${esc(id)}&rel=0" title="${esc(m.nombre)} · ${esc(cur.titulo)}" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>
+            <p class="muted" style="margin:0;font-size:15px">Para elegir una clase, tocá el ícono de lista (☰) arriba a la derecha del reproductor. Las clases están en el orden en que se dictaron.</p>`
+            : `<p class="empty">La lista de esta edición todavía no está cargada.</p>`}`
+          : `<p class="empty">Todavía no hay clases grabadas cargadas para esta materia.</p>`}
+        </section></div>`;
+        main.querySelectorAll(".eds button").forEach(b => b.addEventListener("click", () => { edicion[mid] = +b.dataset.i; render(mid); }));
         bindSwitch(render);
       };
       render(currentMateria());

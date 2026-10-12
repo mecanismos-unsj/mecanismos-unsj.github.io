@@ -229,6 +229,16 @@ const CLASES = [
    unidad:  número de unidad de esa materia (0 = material general)
    archivo: ruta al PDF dentro de /apuntes                                  */
 const APUNTES = [
+  { titulo: "Geometria en Mecanismos", materia: "mecanismos", unidad: 1, archivo: "apuntes/Diseño_MAP.pdf", tipo: "PDF", paginas: 56 },
+  { titulo: "Sintesis Grafica en Mecanismos", materia: "mecanismos", unidad: 2, archivo: "apuntes/Sintesis_Grafica.pdf", tipo: "PDF", paginas: 30 },
+  { titulo: "Cinematica - Análisis de posicion en Mecanismos", materia: "mecanismos", unidad: 3, archivo: "MAP_posicion.pptx", tipo: "PPT", paginas: 28 },
+  { titulo: "Cinematica - Análisis de velocidad en Mecanismos", materia: "mecanismos", unidad: 3, archivo: "MAP_velocidad.pptx", tipo: "PPT", paginas: 27 },
+  { titulo: "Cinematica - Análisis de aceleracion en Mecanismos", materia: "mecanismos", unidad: 3, archivo: "MAP_aceleracion.pptx", tipo: "PPT", paginas: 16 },
+  { titulo: "Cinematica - Ejercicios resueltos en forma grafica y analitica de Mecanismos", materia: "mecanismos", unidad: 3, archivo: "MAP_ejercicios.pdf", tipo: "PDF", paginas: 30 },
+  { titulo: "Dinamica en Mecanismos", materia: "mecanismos", unidad: 4, archivo: "Dinamica_MAP.pdf", tipo: "PDF", paginas: 38 },
+  { titulo: "Transmision de movimiento por contacto directo entre superficies", materia: "mecanismos", unidad: 5, archivo: "Contacto_Directo.pdf", tipo: "PDF", paginas: 49 },
+  { titulo: "Transmision de movimiento por contacto directo entre superficies PPT", materia: "mecanismos", unidad: 5, archivo: "apuntes/Contacto_Directo_PPT.pdf", tipo: "PDF", paginas: 42 },
+  { titulo: "Diseño de Levas", materia: "mecanismos", unidad: 6, archivo: "Levas_v211123.pdf", tipo: "PDF", paginas: 63 },
   // Ejemplo para agregar un apunte:
   // { titulo: "Velocidades por polígonos", materia: "mecanismos", unidad: 3, archivo: "apuntes/u3-velocidades.pdf", tipo: "PDF", paginas: 18 },
 ];

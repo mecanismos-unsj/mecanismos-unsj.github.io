@@ -263,3 +263,21 @@ a.chip:hover{color:var(--ink);border-color:var(--muted)}
 .chip-label{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);align-self:center;margin-right:4px}
 .hours{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:12px}
 .hours .box p{font-size:14px}
+
+/* clases grabadas */
+.eds{display:flex;flex-wrap:wrap;gap:8px}
+.eds button{all:unset;cursor:pointer;display:flex;flex-direction:column;gap:1px;padding:8px 14px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+.eds button b{font-size:15px}
+.eds button span{font-size:12.5px;color:var(--muted)}
+.eds button:hover{border-color:var(--muted)}
+.eds button[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.eds button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.player{position:relative;aspect-ratio:16/9;width:100%;background:#000;border-radius:10px;overflow:hidden;border:1px solid var(--line)}
+.player iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+
+/* subsecciones dentro de Apuntes */
+.subtabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-top:28px;overflow-x:auto}
+.subtabs a{padding:10px 14px;font-weight:600;font-size:15px;color:var(--muted);text-decoration:none;border-bottom:3px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.subtabs a:hover{color:var(--ink)}
+.subtabs a[aria-current="page"]{color:var(--ink);border-bottom-color:var(--accent)}
+.subtabs + .section{padding-top:28px}
