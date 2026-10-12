@@ -157,7 +157,7 @@
         main.innerHTML = pageHead("Programas " + SITIO.anio, "Programa analítico", "", switcher(mid)) + `
         <div class="wrap">
           <section class="section">
-            <div class="sec-head"><h2>${esc(m.nombre)}</h2>${m.archivo ? `<a href="${esc(m.archivo)}" target="_blank" rel="noopener">Planificación completa (PDF)</a>` : ""}</div>
+            <div class="sec-head"><h2>${esc(m.nombre)}</h2></div>
             <dl class="datasheet" style="margin:0">
               <div><dt>Carrera</dt><dd>${esc(m.carrera)}</dd></div><div><dt>Código</dt><dd>${esc(m.codigo)}</dd></div>
               <div><dt>Plan</dt><dd>${esc(m.plan)}</dd></div><div><dt>Semestre</dt><dd>${esc(m.semestre)}</dd></div>
@@ -173,7 +173,7 @@
             <div class="sec-head"><h2>Cronograma ${SITIO.anio}</h2></div>
             ${hasWeeks ? `<div class="gantt-wrap"><table class="gantt">
               <thead><tr><th>Semana</th>${weeks.map(w => `<th>${w}</th>`).join("")}</tr></thead>
-              <tbody>${m.unidades.map(u => `<tr><td><a href="${unitLink(m.id, u.n)}" style="text-decoration:none">Unidad ${u.n}</a></td>${weeks.map(w => `<td class="${u.semanas.includes(w) ? "on" : ""}"></td>`).join("")}</tr>`).join("")}</tbody>
+              <tbody>${m.unidades.map(u => `<tr><td><a href="${unitLink(m.id, u.n)}" style="text-decoration:none">Unidad ${u.n}</a></td>${weeks.map(w => `<td class="${u.semanas.includes(w) ? "on" : ""}"></td>`).join("")}</tr>`).join("")}${(m.actividades || []).map(a => `<tr class="act"><td>${esc(a.nombre)}</td>${weeks.map(w => { const i = a.semanas.indexOf(w); return `<td class="${i >= 0 ? "ev" : ""}">${i >= 0 && a.marcas ? `<span>${esc(a.marcas[i])}</span>` : ""}</td>`; }).join("")}</tr>`).join("")}</tbody>
             </table></div>` : ""}
             <div class="pips">${m.fechas.map(p => `<div class="pip"><b>${esc(p.nombre)}</b><span>${esc(p.fecha)}</span></div>`).join("")}</div>
             ${m.horarios.length ? `<div class="hours">${m.horarios.map(h => `<div class="box"><h2>${esc(h.tipo)}</h2>${h.dias.map(d => `<p class="mono">${esc(d)}</p>`).join("")}</div>`).join("")}</div>` : ""}

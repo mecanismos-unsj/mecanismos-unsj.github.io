@@ -39,7 +39,7 @@ const MATERIAS = [
     codigo: "2764", plan: "2023", semestre: "7.º", cargaTotal: "70 h", cargaSemanal: "5 h",
     moodle: "https://campusvirtual.unsj.edu.ar/course/view.php?id=4076",   // aula de esta materia
     descripcion: "Geometría, síntesis, cinemática y dinámica de los mecanismos articulados planos, transmisión del movimiento de rotación y mecanismos de levas.",
-    archivo: "apuntes/planificacion-mecanismos-2026.pdf",
+    // La planificación en PDF no se publica: el sitio muestra unidades, cronograma y fechas.
     semanas: 14,
     unidades: [
       { n: 1, corto: "Geometría", titulo: "Geometría de los mecanismos articulados planos", horas: 9, semanas: [1, 2],
@@ -104,6 +104,12 @@ const MATERIAS = [
         ] }
     ],
     evaluacion: "Dos trabajos prácticos grupales (síntesis y uso de software) y tres Pruebas Integradoras Parciales (PIP), escritas, con temas teóricos y prácticos. Resultado: Bueno, Suficiente o Reprobado. Cada PIP tiene un recuperatorio dentro de la semana siguiente. Con todas las PIP aprobadas se accede a la evaluación integradora final, oral y teórica.",
+    /* filas extra del cronograma (semanas en que se hacen) */
+    actividades: [
+      { nombre: "Trabajo práctico", semanas: [4, 9] },
+      { nombre: "Laboratorio", semanas: [4] },
+      { nombre: "PIP", semanas: [7, 10, 14], marcas: ["20/04", "15/05", "10/06"] }
+    ],
     fechas: [
       { nombre: "PIP 1", fecha: "20/04" },
       { nombre: "PIP 2", fecha: "15/05" },
@@ -118,7 +124,6 @@ const MATERIAS = [
     codigo: "8424", plan: "2025", semestre: "3.º", cargaTotal: "70 h", cargaSemanal: "5 h",
     moodle: "https://campusvirtual.unsj.edu.ar/course/view.php?id=4009",
     descripcion: "Cinemática y cinética plana del cuerpo rígido, mecanismos articulados, transmisiones por correas, cadenas, engranajes y levas, frenos, embragues y acoplamientos, y vibraciones.",
-    archivo: "apuntes/planificacion-mcr-2026.pdf",
     semanas: 0,
     unidades: [
       { n: 1, corto: "Cuerpo rígido", titulo: "Cinemática y cinética plana del cuerpo rígido", horas: 15,
@@ -209,8 +214,6 @@ const HERRAMIENTAS = [
    unidad:  número de unidad de esa materia (0 = material general)
    archivo: ruta al PDF dentro de /apuntes                                  */
 const APUNTES = [
-  { titulo: "Planificación 2026 — Mecanismos", materia: "mecanismos", unidad: 0, archivo: "apuntes/planificacion-mecanismos-2026.pdf", tipo: "PDF", paginas: 10 },
-  { titulo: "Planificación 2026 — Mecánica del Cuerpo Rígido", materia: "mcr", unidad: 0, archivo: "apuntes/planificacion-mcr-2026.pdf", tipo: "PDF", paginas: 9 },
   // Ejemplo para agregar un apunte:
   // { titulo: "Velocidades por polígonos", materia: "mecanismos", unidad: 3, archivo: "apuntes/u3-velocidades.pdf", tipo: "PDF", paginas: 18 },
 ];
