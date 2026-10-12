@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!--
+  DINALAB — Dinámica de eslabonamientos
+  Universidad Nacional de San Juan — Facultad de Ingeniería — Cátedra Mecanismos
+  Desarrollo: Ing. Manuel Galdeano Ruiz
+  Material didáctico de la Cátedra Mecanismos (FI-UNSJ).
+-->
+<meta name="author" content="Ing. Manuel Galdeano Ruiz — Cátedra Mecanismos, Facultad de Ingeniería, Universidad Nacional de San Juan">
+<title>DINALAB</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: banco de trabajo — barra de módulos arriba, panel de control a la izquierda, lámina milimetrada a la derecha.
+   Misma familia visual que MECALAB y CONTACTLAB. */
+:root{
+  --bg:#eef1ef; --panel:#fbfcfb; --canvas:#f7f9f8; --ink:#1b2320; --muted:#5d6a64; --line:#d3dbd7;
+  --grid:#e4eae7; --grid2:#d2dbd6;
+  --b1:#c9500a; --b1f:#fbeee6; --b2:#8a3fa8; --b2f:#f3eaf7; --geo:#1d7f47; --hot:#d97706; --warn:#c0392b;
+  --accent:#c9500a; --accent-ink:#ffffff;
+  --l1:#6b7570; --l2:#1f6fb2; --l3:#1d7f47; --l4:#c9500a; --l5:#8a3fa8; --l6:#0f8b8d;
+  --steel:#c9d2ce; --lining:#5b4a3a;
+  --f-ui:"Barlow Semi Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0f1412; --panel:#151b19; --canvas:#111715; --ink:#e4eae7; --muted:#8f9d97; --line:#2a3430;
+  --grid:#18201d; --grid2:#222c28;
+  --b1:#ff8a3d; --b1f:rgba(255,138,61,.13); --b2:#c693e6; --b2f:rgba(198,147,230,.13); --geo:#4fcf89; --hot:#ffc24a; --warn:#ff6b5b;
+  --accent:#ff8a3d; --accent-ink:#1b1208; --l1:#a3ada8; --l2:#6aaef0; --l3:#4fcf89; --l4:#ff8a3d; --l5:#c693e6; --l6:#4fd1d3;
+  --steel:#2c3633; --lining:#a08a72; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0f1412; --panel:#151b19; --canvas:#111715; --ink:#e4eae7; --muted:#8f9d97; --line:#2a3430;
+  --grid:#18201d; --grid2:#222c28;
+  --b1:#ff8a3d; --b1f:rgba(255,138,61,.13); --b2:#c693e6; --b2f:rgba(198,147,230,.13); --geo:#4fcf89; --hot:#ffc24a; --warn:#ff6b5b;
+  --accent:#ff8a3d; --accent-ink:#1b1208; --l1:#a3ada8; --l2:#6aaef0; --l3:#4fcf89; --l4:#ff8a3d; --l5:#c693e6; --l6:#4fd1d3;
+  --steel:#2c3633; --lining:#a08a72; color-scheme:dark }
+
+html,body{height:100%;margin:0}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:15px;line-height:1.4}
+.app{display:grid;grid-template-rows:auto 1fr;height:100%}
+
+.top{display:flex;align-items:stretch;gap:20px;padding-inline:16px;background:var(--panel);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.brand{display:flex;flex-direction:column;justify-content:center;padding-block:8px}
+.brand b{font-weight:700;font-size:20px;letter-spacing:.14em}
+.brand b span{color:var(--accent)}
+.brand small{font-size:12px;color:var(--muted);letter-spacing:.02em}
+.tabs{display:flex;gap:2px;overflow-x:auto;min-width:0;flex:1}
+.tab{all:unset;cursor:pointer;display:flex;align-items:center;gap:6px;padding:0 9px;font-size:14px;font-weight:600;color:var(--muted);border-bottom:3px solid transparent;white-space:nowrap;min-height:52px}
+.tab .n{font-family:var(--f-mono);font-size:11px;font-weight:400}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tab:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.hidebtn{all:unset;cursor:pointer;align-self:center;padding:7px 12px;border:1px solid var(--line);border-radius:5px;font-size:13.5px;font-weight:600;white-space:nowrap}
+.hidebtn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.hidebtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.work{display:grid;grid-template-columns:340px minmax(0,1fr);min-height:0}
+.panel{overflow-y:auto;background:var(--panel);border-right:1px solid var(--line);padding:14px 16px 20px;display:flex;flex-direction:column;gap:18px;min-height:0}
+.sec{display:flex;flex-direction:column;gap:10px}
+.sec h3{margin:0;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.lead{margin:0;font-size:14px;color:var(--muted)}
+.lead strong{color:var(--ink);font-weight:600}
+
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{all:unset;cursor:pointer;text-align:center;padding:7px 6px;font-size:13px;font-weight:600;color:var(--muted)}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+.seg button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+
+.field{display:grid;grid-template-columns:1fr auto;gap:2px 8px;align-items:baseline}
+.field label{font-size:14px;font-weight:500}
+.field output{font-family:var(--f-mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.field input[type=range]{grid-column:1/-1;width:100%}
+.field.flash{animation:flash 1.6s ease 2}
+@keyframes flash{50%{background:color-mix(in srgb,var(--accent) 18%,transparent)}}
+
+.toggles{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.chk{display:flex;align-items:center;gap:7px;font-size:13.5px;cursor:pointer;padding:5px 7px;border:1px solid var(--line);border-radius:5px}
+.chk input{accent-color:var(--accent);margin:0}
+.chk i{width:10px;height:10px;border-radius:2px;flex:none}
+
+.calc{border:1px solid var(--line);border-radius:6px;background:var(--canvas);padding:8px 10px;display:flex;flex-direction:column;gap:6px}
+.calc .eq{font-family:var(--f-mono);font-size:12.5px;line-height:1.5;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.calc .eq .v{color:var(--accent)}
+.calc .eq.c{color:var(--muted);white-space:normal;font-family:var(--f-ui);font-size:13px}
+.state{font-size:13.5px;font-weight:700;padding:6px 10px;border-radius:5px;border:1px solid var(--line)}
+.state.ok{color:var(--geo);border-color:color-mix(in srgb,var(--geo) 50%,transparent)}
+.state.warn{color:var(--hot);border-color:color-mix(in srgb,var(--hot) 50%,transparent)}
+.state.bad{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 55%,transparent);background:color-mix(in srgb,var(--warn) 8%,transparent)}
+.pchart{width:100%;height:170px;display:block;border:1px solid var(--line);border-radius:6px;background:var(--canvas)}
+.cap{font-size:12.5px;color:var(--muted);margin:0}
+table.mat{border-collapse:collapse;width:100%;font-size:13px}
+table.mat td{border-bottom:1px solid var(--line);padding:5px 4px;vertical-align:top}
+table.mat td+td{font-family:var(--f-mono);font-size:12px;text-align:right;white-space:nowrap}
+
+.stage{position:relative;display:flex;flex-direction:column;min-width:0;min-height:0}
+.cvwrap{position:relative;flex:1;min-height:0;background:var(--canvas)}
+#cv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+#cv.drag{cursor:grabbing}
+#cv.over{cursor:pointer}
+.readout{position:absolute;top:12px;right:12px;background:color-mix(in srgb,var(--panel) 92%,transparent);border:1px solid var(--line);border-radius:6px;padding:8px 10px;min-width:230px;max-width:46%;pointer-events:none}
+.readout dl{margin:0;display:grid;grid-template-columns:auto auto;gap:3px 14px}
+.readout dt{font-size:13px;color:var(--muted)}
+.readout dd{margin:0;text-align:right;font-family:var(--f-mono);font-size:12.5px;font-variant-numeric:tabular-nums}
+.readout dd.key{color:var(--accent);font-weight:500}
+.readout .rt{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.hidevals .readout dd,.hidevals .calc .v,.hidevals .state{filter:blur(6px);user-select:none}
+.hint{position:absolute;left:12px;top:12px;font-size:12.5px;color:var(--muted);pointer-events:none;max-width:calc(54% - 24px)}
+.zoombar{position:absolute;right:12px;bottom:12px;display:flex;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.zoombar button{all:unset;cursor:pointer;min-width:32px;height:32px;display:grid;place-items:center;font-size:17px;font-weight:600;color:var(--ink)}
+.zoombar button.txt{font-size:13px;padding:0 10px;border-left:1px solid var(--line)}
+.zoombar button:hover{background:var(--bg)}
+.zoombar button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.zoombar output{font-family:var(--f-mono);font-size:12px;min-width:52px;text-align:center;font-variant-numeric:tabular-nums;color:var(--muted)}
+
+.guide{border-top:1px solid var(--line);background:var(--panel);padding:10px 16px 12px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 18px;align-items:start}
+.steps{display:flex;gap:4px;grid-row:span 2}
+.steps button{all:unset;cursor:pointer;width:30px;height:30px;display:grid;place-items:center;border:1px solid var(--line);border-radius:50%;font-family:var(--f-mono);font-size:12px}
+.steps button[aria-current="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.steps button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.guide h4{margin:0;font-size:16px;font-weight:700;text-wrap:balance}
+.guide p{margin:0;font-size:14.5px;max-width:80ch;color:var(--ink)}
+
+.credits{margin-top:auto;padding-top:12px;border-top:1px solid var(--line);font-size:11px;line-height:1.45;color:var(--muted)}
+.credits b{display:block;font-weight:600}
+.credits .d{margin-top:4px}
+
+@media (max-width:860px){
+  html,body{height:auto}
+  .app{height:auto;display:block}
+  .work{display:flex;flex-direction:column}
+  .stage{order:-1}
+  .cvwrap{height:62vh;flex:none}
+  .panel{border-right:0;border-top:1px solid var(--line);overflow:visible}
+  .readout{position:static;margin:10px 16px 0;min-width:0;max-width:none}
+  .hint{display:none}
+  .guide{grid-template-columns:1fr}
+  .steps{grid-row:auto}
+  .tabs{order:3;flex-basis:100%;margin-inline:-16px;padding-inline:8px}
+  .top{gap:8px 20px}
+  .hidebtn{margin-left:auto}
+}
+@media (prefers-reduced-motion:reduce){ .field.flash{animation:none} }
+
+/* sliders iguales en todos los navegadores y temas */
+input[type=range]{-webkit-appearance:none;appearance:none;background:transparent;height:20px;cursor:pointer;margin:0;padding:0}
+input[type=range]:focus{outline:none}
+input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:linear-gradient(to right,var(--accent) 0 var(--fill,0%),var(--line) var(--fill,0%) 100%);border:0}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;border-radius:50%;background:var(--accent);border:2px solid var(--panel);box-shadow:0 0 0 1px var(--accent);margin-top:-6px}
+input[type=range]::-moz-range-track{height:4px;border-radius:2px;background:var(--line);border:0}
+input[type=range]::-moz-range-progress{height:4px;border-radius:2px;background:var(--accent)}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--accent);border:2px solid var(--panel);box-shadow:0 0 0 1px var(--accent)}
+input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 35%,transparent)}
+.tab.dd .tl{display:flex;flex-direction:column;line-height:1.1}
+.tab.dd .tl small{font-size:11px;font-weight:500;color:var(--muted)}
+.tab.dd .tl small:empty{display:none}
+.tab.dd .car{width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid currentColor;margin-left:2px}
+.tab.dd[aria-expanded="true"]{color:var(--ink)}
+.ddmenu{position:fixed;z-index:20;min-width:240px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:5px;box-shadow:0 10px 28px rgba(0,0,0,.16);display:flex;flex-direction:column}
+.ddmenu[hidden]{display:none}
+.ddmenu button{all:unset;cursor:pointer;display:flex;gap:10px;align-items:baseline;padding:8px 10px;border-radius:5px;font-size:14px;font-weight:600;color:var(--ink)}
+.ddmenu button .n{font-family:var(--f-mono);font-size:11px;font-weight:400;color:var(--muted);min-width:24px}
+.ddmenu button:hover,.ddmenu button:focus-visible{background:var(--bg);outline:none}
+.ddmenu button[aria-current="true"]{background:color-mix(in srgb,var(--accent) 12%,transparent)}
+details.fold>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:2px 8px;flex-wrap:wrap}
+details.fold>summary small{order:3;flex-basis:100%}
+details.fold>summary::-webkit-details-marker{display:none}
+details.fold>summary::after{content:"";width:6px;height:6px;border-right:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);transform:rotate(-45deg);margin-left:auto;transition:transform .15s}
+details.fold[open]>summary::after{transform:rotate(45deg)}
+details.fold>summary small{font-family:var(--f-mono);font-size:11px;color:var(--muted);font-weight:400;letter-spacing:0;text-transform:none}
+details.fold[open]{gap:10px}
+.mtxview{position:absolute;inset:0;overflow:auto;background:var(--canvas);padding:18px 22px 80px;display:flex;flex-direction:column;gap:18px}
+.mtxview[hidden]{display:none}
+.mtxview h4{margin:0;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.mtxview .eqs{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px 24px;font-family:var(--f-mono);font-size:12.5px;line-height:1.6}
+.mtxview .eqs div b{font-family:var(--f-ui);font-size:13px;display:block;margin-bottom:2px}
+.bm{border-collapse:separate;border-spacing:0;font-family:var(--f-mono);font-size:12.5px;font-variant-numeric:tabular-nums}
+.bm td{padding:3px 8px;text-align:right;white-space:nowrap}
+.bm td.al{border-left:1.6px solid var(--ink)} .bm td.ar{border-right:1.6px solid var(--ink)}
+.bm tr:first-child td.al,.bm tr:first-child td.ar{border-top:1.6px solid var(--ink)} .bm tr:last-child td.al,.bm tr:last-child td.ar{border-bottom:1.6px solid var(--ink)}
+.bm td.op{color:var(--muted);font-size:15px;text-align:center;padding:0 6px}
+.bm td.gl{font-family:var(--f-ui);font-size:11px;font-weight:700;color:var(--muted);text-align:left;padding-right:12px;letter-spacing:.06em}
+.bm tr.g3 td.a,.bm tr.g3 td.c{background:color-mix(in srgb,var(--ink) 4%,transparent)}
+.bm td.u{color:var(--accent);font-weight:600}
+.bm td.v{color:var(--accent)}
+.bm td.z{color:color-mix(in srgb,var(--muted) 55%,transparent)}
+.soltab{border-collapse:collapse;font-family:var(--f-mono);font-size:13px}
+.soltab td{padding:4px 14px 4px 0;border-bottom:1px solid var(--line)} .soltab td.v{color:var(--accent);text-align:right}
+.hidevals .bm td.v,.hidevals .bm td.u.v,.hidevals .soltab td.v{filter:blur(6px)}
+.cvwrap.nozoom .zoombar>button:not(#z-play),.cvwrap.nozoom #z-val{display:none}
+.useg{align-self:center;min-width:130px}
+.mtx{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-family:var(--f-mono);font-size:11.5px;font-variant-numeric:tabular-nums}
+.mtx table{border-collapse:collapse;border-left:1.5px solid var(--ink);border-right:1.5px solid var(--ink);border-radius:4px}
+.mtx td{padding:1px 6px;text-align:right;white-space:nowrap}
+.mtx td.u{color:var(--accent)}
+.mtx .op{font-size:14px;color:var(--muted)}
+.mtx .lab{font-size:10px;color:var(--muted);text-align:center;font-family:var(--f-ui);font-weight:700;letter-spacing:.08em}
+.mtxwrap{overflow-x:auto;display:flex;flex-direction:column;gap:6px}
+.btnrow{display:flex;gap:6px;flex-wrap:wrap}
+.btnrow button{all:unset;cursor:pointer;padding:6px 10px;border:1px solid var(--line);border-radius:5px;font-size:13px;font-weight:600}
+.btnrow button:hover{border-color:var(--accent)}
+.btnrow button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header class="top">
+    <div class="brand"><b>DINA<span>LAB</span></b><small>Dinámica de eslabonamientos</small></div>
+    <nav class="tabs" role="tablist" aria-label="Módulos">
+      <button class="tab dd" data-menu="fund" aria-haspopup="menu" aria-expanded="false" aria-controls="menu-fund"><span class="n">01</span><span class="tl">Fundamentos<small id="sub-fund"></small></span><span class="car" aria-hidden="true"></span></button>
+      <button class="tab" role="tab" data-go="rot"><span class="n">02</span>Rotación pura</button>
+      <button class="tab" role="tab" data-go="mc3"><span class="n">03</span>Corredera 3 barras</button>
+      <button class="tab" role="tab" data-go="cuad"><span class="n">04</span>Cuatro barras</button>
+      <button class="tab" role="tab" data-go="pist"><span class="n">05</span>Corredera 4 barras</button>
+      <button class="tab" role="tab" data-go="vol"><span class="n">06</span>Volantes</button>
+    </nav>
+    <div class="ddmenu" id="menu-fund" role="menu" aria-label="Fundamentos" hidden>
+      <button role="menuitem" data-go="masa"><span class="n">1.1</span>Propiedades de masa</button>
+      <button role="menuitem" data-go="pend"><span class="n">1.2</span>Método del péndulo</button>
+      <button role="menuitem" data-go="dal"><span class="n">1.3</span>Principio de d'Alembert</button>
+    </div>
+    <div class="seg useg" role="group" aria-label="Unidades"><button type="button" data-u="si" aria-pressed="true">SI</button><button type="button" data-u="tec" aria-pressed="false">Técnico</button></div>
+    <button class="hidebtn" id="hidebtn" aria-pressed="false" title="Oculta los resultados para que la clase los estime antes">Ocultar resultados</button>
+  </header>
+
+  <main class="work">
+    <aside class="panel" id="panel">
+      <div id="ctrls" class="sec" style="gap:18px"></div>
+      <div class="credits" aria-label="Créditos">
+        <b>Universidad Nacional de San Juan</b>
+        Facultad de Ingeniería<br>
+        Cátedra Mecanismos
+        <div class="d">Ing. Manuel Galdeano Ruiz</div>
+      </div>
+    </aside>
+
+    <section class="stage">
+      <div class="cvwrap">
+        <canvas id="cv" aria-label="Esquema del eslabón con sus fuerzas"></canvas>
+        <div class="hint" id="hint"></div>
+        <div class="mtxview" id="mtxview" hidden></div>
+        <div class="zoombar" role="group" aria-label="Vista">
+          <button id="z-out" aria-label="Alejar">−</button>
+          <output id="z-val">100 %</output>
+          <button id="z-in" aria-label="Acercar">+</button>
+          <button id="z-fit" class="txt">Encuadrar</button>
+          <button id="z-play" class="txt" aria-pressed="true">Pausar</button>
+        </div>
+      </div>
+      <div class="readout" id="readout"></div>
+      <div class="guide" id="guide">
+        <div class="steps" id="steps"></div>
+        <h4 id="g-title"></h4>
+        <p id="g-text"></p>
+      </div>
+    </section>
+  </main>
+</div>
+<script>
+(()=>{
+"use strict";
+const $ = s => document.querySelector(s);
+const cv = $('#cv'), ctx = cv.getContext('2d');
+let W = 0, H = 0, DPR = 1;
+const DEG = Math.PI/180;
+
+/* ---------------- utilidades ---------------- */
+const V=(x,y)=>({x,y});
+const add=(a,b)=>V(a.x+b.x,a.y+b.y), sub=(a,b)=>V(a.x-b.x,a.y-b.y), mul=(a,k)=>V(a.x*k,a.y*k);
+const dot=(a,b)=>a.x*b.x+a.y*b.y, crs=(a,b)=>a.x*b.y-a.y*b.x, hyp=a=>Math.hypot(a.x,a.y);
+const nrm=a=>{const l=hyp(a)||1;return V(a.x/l,a.y/l);};
+const ue=a=>V(Math.cos(a),Math.sin(a)), up=a=>V(-Math.sin(a),Math.cos(a));
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const fmt=(x,d=2)=>Number.isFinite(x)?x.toLocaleString('es-AR',{minimumFractionDigits:d,maximumFractionDigits:d}):'—';
+const fN=x=>fmt(x,0)+' N', fNm=x=>fmt(x/1000,1)+' N·m', fMPa=x=>fmt(x,3)+' MPa', fkg=x=>fmt(x*10.197,2)+' kgf/cm²';
+const rgba=(hex,a)=>{ const h=hex.replace('#',''); const n=parseInt(h.length===3?h.split('').map(c=>c+c).join(''):h,16); return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`; };
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------------- colores (tokens) ---------------- */
+const C={};
+function readColors(){const cs=getComputedStyle(document.documentElement);
+  ['canvas','ink','muted','line','grid','grid2','b1','b1f','b2','b2f','geo','hot','warn','panel','accent','l2','l3','l5','l6','steel','lining'].forEach(k=>C[k]=cs.getPropertyValue('--'+k).trim());}
+readColors();
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{readColors();draw();});
+new MutationObserver(()=>{readColors();draw();}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+const FONT=()=>getComputedStyle(document.body).getPropertyValue('--f-mono');
+
+/* ---------------- vista: mundo en mm (y hacia arriba) -> pantalla ---------------- */
+const view={s:1,ox:0,oy:0}; const CAMS={};
+let base={s:1,c:V(0,0)};
+const cam=()=>CAMS[mod]||(CAMS[mod]={z:1,pan:V(0,0)});
+function fit(b){ const pad=34, k=cam();
+  const wide=W>860, top=wide?40:20, rw=wide?Math.min(270,W*.24):0; // lugar para la lectura (arriba a la derecha)
+  const aw=W-rw; base.s=Math.min((aw-2*pad)/(b[2]-b[0]),(H-pad-top)/(b[3]-b[1])); base.c=V((b[0]+b[2])/2,(b[1]+b[3])/2);
+  view.s=base.s*k.z; const c=add(base.c,k.pan);
+  view.ox=aw/2-view.s*c.x; view.oy=(H+top-pad)/2+view.s*c.y; }
+const S=p=>V(view.ox+view.s*p.x, view.oy-view.s*p.y);
+const toW=q=>V((q.x-view.ox)/view.s, (view.oy-q.y)/view.s);
+function zoomAt(q,f){ const k=cam(), z2=clamp(k.z*f,.4,20); if(z2===k.z) return;
+  const m=toW(q); k.z=z2; fit(M().bbox(st())); const m2=toW(q); k.pan=add(k.pan,sub(m,m2)); syncZoom(); draw(); }
+function syncZoom(){ $('#z-val').textContent=Math.round(cam().z*100)+' %'; }
+
+function resize(){ const r=cv.getBoundingClientRect(); DPR=window.devicePixelRatio||1; W=r.width; H=r.height;
+  cv.width=Math.max(1,Math.round(W*DPR)); cv.height=Math.max(1,Math.round(H*DPR)); draw(); }
+new ResizeObserver(resize).observe(cv.parentElement);
+
+/* ---------------- primitivas de dibujo ---------------- */
+function clear(){ ctx.setTransform(DPR,0,0,DPR,0,0); ctx.fillStyle=C.canvas; ctx.fillRect(0,0,W,H); }
+function grid(){ const a=toW(V(0,H)), b=toW(V(W,0));
+  for(const [step,col] of [[10,C.grid],[50,C.grid2]]){ if(step*view.s<6) continue;
+    ctx.strokeStyle=col; ctx.lineWidth=1; ctx.beginPath();
+    for(let x=Math.ceil(a.x/step)*step;x<=b.x;x+=step){const X=Math.round(S(V(x,0)).x)+.5;ctx.moveTo(X,0);ctx.lineTo(X,H);}
+    for(let y=Math.ceil(a.y/step)*step;y<=b.y;y+=step){const Y=Math.round(S(V(0,y)).y)+.5;ctx.moveTo(0,Y);ctx.lineTo(W,Y);}
+    ctx.stroke(); }
+  const mm=[5,10,20,50,100,200,500].find(v=>v*view.s>=60)||500, L=mm*view.s, x=16, y=H-18;
+  ctx.strokeStyle=C.muted; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+L,y); ctx.moveTo(x,y-4);ctx.lineTo(x,y+4);ctx.moveTo(x+L,y-4);ctx.lineTo(x+L,y+4); ctx.stroke();
+  label(SYS==='tec'?fmt(mm/10,mm<10?1:0)+' cm':mm+' mm',V(x+L+6,y),C.muted,'left',true); }
+function path(pts,{stroke=null,w=1,fill=null,dash=null,close=false}={}){ if(pts.length<2) return; ctx.save(); if(dash) ctx.setLineDash(dash);
+  ctx.beginPath(); pts.forEach((p,i)=>{const P=S(p); i?ctx.lineTo(P.x,P.y):ctx.moveTo(P.x,P.y);}); if(close) ctx.closePath();
+  if(fill){ctx.fillStyle=fill;ctx.fill();} if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=w;ctx.lineJoin='round';ctx.stroke();} ctx.restore(); }
+const line=(a,b,col,w=1,dash=null)=>path([a,b],{stroke:col,w,dash});
+function circle(c,r,stroke,w=1,fill=null,dash=null){ const P=S(c); ctx.save(); if(dash) ctx.setLineDash(dash); ctx.beginPath(); ctx.arc(P.x,P.y,Math.max(0,r*view.s),0,2*Math.PI);
+  if(fill){ctx.fillStyle=fill;ctx.fill();} if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=w;ctx.stroke();} ctx.restore(); }
+const arcPts=(c,r,a0,a1,n=64)=>{const p=[];for(let i=0;i<=n;i++){const a=a0+(a1-a0)*i/n;p.push(add(c,mul(ue(a),r)));}return p;};
+const rotAbout=(p,c,d)=>{ const q=sub(p,c), co=Math.cos(d), sn=Math.sin(d); return add(c,V(q.x*co-q.y*sn,q.x*sn+q.y*co)); };
+function bandT(c,r0,r1,a0,a1,fill,stroke,T){ const o=arcPts(c,r1,a0,a1), i=arcPts(c,r0,a1,a0); path(o.concat(i).map(T),{fill,stroke,w:1.2,close:true}); }
+function band(c,r0,r1,a0,a1,fill,stroke){ const o=arcPts(c,r1,a0,a1), i=arcPts(c,r0,a1,a0); path(o.concat(i),{fill,stroke,w:1.2,close:true}); }
+function label(t,p,col,align='left',screen=false,dx=0,dy=0,size=12){ const P=screen?p:S(p); ctx.save(); ctx.font=`500 ${size}px ${FONT()}`;
+  ctx.textAlign=align; ctx.textBaseline='middle'; ctx.lineJoin='round'; ctx.strokeStyle=C.canvas; ctx.lineWidth=4; ctx.strokeText(t,P.x+dx,P.y+dy); ctx.fillStyle=col; ctx.fillText(t,P.x+dx,P.y+dy); ctx.restore(); }
+/* flecha: punto en mundo, dirección en mundo, largo en px. tip=true -> la punta queda en el punto */
+function arrow(p,dir,len,col,txt,{tip=false,w=2.4,dash=null}={}){ if(!(len>2)) return; const d0=nrm(dir), d=V(d0.x,-d0.y); let A=S(p), B=add(A,mul(d,len)); if(tip){B=A;A=sub(B,mul(d,len));}
+  const n=V(-d.y,d.x), h=Math.min(11,len*.45);
+  ctx.save(); ctx.strokeStyle=col; ctx.fillStyle=col; ctx.lineWidth=w; ctx.lineCap='round'; if(dash) ctx.setLineDash(dash); ctx.beginPath(); ctx.moveTo(A.x,A.y); ctx.lineTo(B.x-d.x*h*.7,B.y-d.y*h*.7); ctx.stroke(); ctx.setLineDash([]);
+  ctx.beginPath(); ctx.moveTo(B.x,B.y); ctx.lineTo(B.x-d.x*h+n.x*h*.45,B.y-d.y*h+n.y*h*.45); ctx.lineTo(B.x-d.x*h-n.x*h*.45,B.y-d.y*h-n.y*h*.45); ctx.closePath(); ctx.fill(); ctx.restore();
+  if(txt){ const q=tip?A:B; label(txt,add(q,mul(d,tip?-13:13)),col,'center',true); } }
+/* flecha curva (giro o cupla): centro, radio en px, ángulo inicial y barrido (rad, + antihorario) */
+function curl(c,Rpx,a0,sw,col,txt,dash=null){ const P=S(c); ctx.save(); ctx.strokeStyle=col; ctx.fillStyle=col; ctx.lineWidth=2.2; if(dash) ctx.setLineDash(dash); ctx.beginPath();
+  ctx.arc(P.x,P.y,Rpx,-a0,-(a0+sw),sw>0); ctx.stroke(); ctx.setLineDash([]);
+  const ae=a0+sw, E=add(P,V(Math.cos(ae)*Rpx,-Math.sin(ae)*Rpx)), t=V(-Math.sin(ae)*Math.sign(sw),-Math.cos(ae)*Math.sign(sw)), n=V(-t.y,t.x);
+  ctx.beginPath(); ctx.moveTo(E.x+t.x*9,E.y+t.y*9); ctx.lineTo(E.x+n.x*4.5,E.y+n.y*4.5); ctx.lineTo(E.x-n.x*4.5,E.y-n.y*4.5); ctx.closePath(); ctx.fill(); ctx.restore();
+  if(txt){ const am=a0+sw/2; label(txt,add(P,V(Math.cos(am)*(Rpx+14),-Math.sin(am)*(Rpx+14))),col,'center',true); } }
+function dotp(c,rad,col){ const P=S(c); ctx.fillStyle=col; ctx.beginPath(); ctx.arc(P.x,P.y,rad,0,2*Math.PI); ctx.fill(); }
+function pin(p,col){ const P=S(p); ctx.save(); ctx.beginPath(); ctx.arc(P.x,P.y,6,0,7); ctx.fillStyle=C.panel; ctx.fill(); ctx.strokeStyle=col||C.ink; ctx.lineWidth=2; ctx.stroke(); ctx.restore(); }
+function ground(p,ang=-Math.PI/2){ // apoyo fijo: triángulo + rayado, ang = dirección hacia el suelo (mundo)
+  const d=ue(ang), n=V(-d.y,d.x), P=S(p), D=V(d.x,-d.y), N=V(n.x,-n.y);
+  ctx.save(); ctx.strokeStyle=C.ink; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(P.x,P.y); ctx.lineTo(P.x+D.x*18+N.x*12,P.y+D.y*18+N.y*12); ctx.lineTo(P.x+D.x*18-N.x*12,P.y+D.y*18-N.y*12); ctx.closePath(); ctx.stroke();
+  ctx.beginPath(); for(let i=-14;i<=12;i+=6){const Q=V(P.x+D.x*18+N.x*i,P.y+D.y*18+N.y*i); ctx.moveTo(Q.x,Q.y); ctx.lineTo(Q.x+D.x*7+N.x*5,Q.y+D.y*7+N.y*5);} ctx.stroke(); ctx.restore(); pin(p); }
+function head(P,d,col){ const n=V(-d.y,d.x); ctx.beginPath(); ctx.moveTo(P.x,P.y); ctx.lineTo(P.x-d.x*9+n.x*3.5,P.y-d.y*9+n.y*3.5); ctx.lineTo(P.x-d.x*9-n.x*3.5,P.y-d.y*9-n.y*3.5); ctx.closePath(); ctx.fill(); }
+/* cota entre a y b (mundo), corrida off px (+ a la izquierda de a→b). ea / eb: puntos desde donde salen las líneas de referencia */
+function dim(a,b,off,txt,col,ea,eb){ col=col||C.muted; const d=nrm(sub(b,a)), n=V(-d.y,d.x), o=mul(n,off/view.s), A=add(a,o), B=add(b,o);
+  const SA=S(A), SB=S(B), D=nrm(sub(SB,SA)), N=V(-D.y,D.x), L=hyp(sub(SB,SA));
+  ctx.save(); ctx.strokeStyle=col; ctx.fillStyle=col; ctx.lineWidth=.9;
+  for(const [from,to] of [[ea||a,A],[eb||b,B]]){ const F=S(from), T=S(to), u=nrm(sub(T,F)), l=hyp(sub(T,F)); if(l<3) continue;
+    ctx.setLineDash([3,3]); ctx.beginPath(); ctx.moveTo(F.x+u.x*3,F.y+u.y*3); ctx.lineTo(T.x+u.x*6,T.y+u.y*6); ctx.stroke(); }
+  ctx.setLineDash([]); ctx.lineWidth=1.1;
+  if(L>26){ ctx.beginPath(); ctx.moveTo(SA.x,SA.y); ctx.lineTo(SB.x,SB.y); ctx.stroke(); head(SB,D,col); head(SA,mul(D,-1),col); }
+  else { ctx.beginPath(); ctx.moveTo(SA.x-D.x*16,SA.y-D.y*16); ctx.lineTo(SB.x+D.x*16,SB.y+D.y*16); ctx.stroke(); head(SA,D,col); head(SB,mul(D,-1),col); }
+  ctx.restore();
+  if(txt){ const M=V((SA.x+SB.x)/2,(SA.y+SB.y)/2); const side=off>=0?-1:1; label(txt,V(M.x+N.x*11*(off>=0?1:-1)*-1,M.y+N.y*11*(off>=0?1:-1)*-1),col,'center',true); } }
+function drum(c,r,phi,{ring=0,fill=null,holes=6}={}){ // tambor/disco con marcas que giran
+  if(ring>0){ band(c,r,r+ring,0,2*Math.PI,C.steel,C.ink); circle(c,r*.32,C.ink,1.4,C.steel); }
+  else circle(c,r,C.ink,1.6,fill||C.steel);
+  for(let i=0;i<holes;i++){ const q=add(c,mul(ue(phi+i*2*Math.PI/holes),r*(ring>0?.2:.62))); circle(q,r*(ring>0?.035:.07),C.muted,1,C.canvas); }
+  circle(c,r*.12,C.ink,1.2,C.canvas); const P=S(c); ctx.strokeStyle=C.ink; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(P.x-7,P.y);ctx.lineTo(P.x+7,P.y);ctx.moveTo(P.x,P.y-7);ctx.lineTo(P.x,P.y+7);ctx.stroke(); }
+function spring(a,b,col){ const d=sub(b,a), L=hyp(d), u=mul(d,1/L), n=V(-u.y,u.x), pts=[a]; const k=10, amp=L*.06;
+  for(let i=1;i<k;i++) pts.push(add(add(a,mul(u,L*(.15+.7*i/k))),mul(n,(i%2?1:-1)*amp))); pts.push(b); path(pts,{stroke:col,w:1.3}); }
+
+/* ---------------- gráficos del panel ---------------- */
+function chart(id,{xs,series,xr,yr,xl,yl,shade,marks=[],xt=[],yd=null,xd=0}){ const c=document.getElementById(id); if(!c) return; const r=c.getBoundingClientRect(); const d=window.devicePixelRatio||1;
+  c.width=Math.round(r.width*d); c.height=Math.round(r.height*d); const g=c.getContext('2d'); g.setTransform(d,0,0,d,0,0);
+  const w=r.width, h=r.height, L=44, R=18, T=12, B=28; const X=x=>L+(x-xr[0])/(xr[1]-xr[0])*(w-L-R), Y=y=>h-B-(y-yr[0])/(yr[1]-yr[0])*(h-T-B);
+  g.fillStyle=C.canvas; g.fillRect(0,0,w,h); g.font=`11px ${FONT()}`; g.fillStyle=C.muted; g.strokeStyle=C.line; g.lineWidth=1;
+  for(let i=0;i<=4;i++){ const y=yr[0]+(yr[1]-yr[0])*i/4, Yp=Math.round(Y(y))+.5; g.beginPath(); g.moveTo(L,Yp); g.lineTo(w-R,Yp); g.stroke(); g.textAlign='right'; g.textBaseline='middle'; g.fillText(fmt(y,yd??(yr[1]<3?1:0)),L-5,Yp); }
+  g.textAlign='center'; g.textBaseline='top'; (xt.length?xt:[xr[0],(xr[0]+xr[1])/2,xr[1]]).forEach(x=>g.fillText(typeof x==='number'?fmt(x,xd):x[1],X(typeof x==='number'?x:x[0]),h-B+5));
+  if(shade){ g.fillStyle=C.b1f; g.fillRect(X(shade[0]),T,X(shade[1])-X(shade[0]),h-T-B); }
+  series.forEach(s=>{ g.strokeStyle=s.col; g.lineWidth=s.w||2; g.setLineDash(s.dash||[]); g.beginPath(); xs.forEach((x,i)=>{const yy=s.ys[i]; if(!Number.isFinite(yy)) return; i?g.lineTo(X(x),Y(yy)):g.moveTo(X(x),Y(yy));}); g.stroke(); g.setLineDash([]); });
+  marks.forEach(m=>{ g.fillStyle=m.col; g.beginPath(); g.arc(X(m.x),Y(m.y),4,0,7); g.fill(); if(m.t){g.textAlign='left';g.textBaseline='bottom';g.fillText(m.t,X(m.x)+6,Y(m.y)-3);} });
+  g.fillStyle=C.muted; g.textAlign='left'; g.textBaseline='top'; g.fillText(yl,L+4,1); g.textAlign='right'; g.textBaseline='bottom'; g.fillText(xl,w-R,h-1); }
+
+
+/* =====================================================================
+   UNIDADES — el estado se guarda siempre en SI (m, kg, N, s)
+   ===================================================================== */
+const G0=9.80665;
+let SYS='si';
+/* unidades de pantalla: [factor desde SI, rótulo, decimales] */
+const UN={
+  si:{L:[1000,'mm',0],F:[1,'N',1],M:[1,'kg',3],I:[1,'kg·m²',5],T:[1,'N·m',2],A:[1,'m/s²',2],E:[1,'J',2],D:[1,'kg/m³',0]},
+  tec:{L:[100,'cm',2],F:[1/G0,'kgf',2],M:[1,'kgf',3],I:[1/0.0980665,'kgf·cm·s²',4],T:[1/0.0980665,'kgf·cm',2],A:[100,'cm/s²',1],E:[1/0.0980665,'kgf·cm',2],D:[1e-3,'kgf/dm³',2]}};
+/* unidades "base" de cálculo (las que entran en las ecuaciones y en las matrices) */
+const BU={
+  si:{L:[1,'m'],F:[1,'N'],m:[1,'kg'],I:[1,'kg·m²'],T:[1,'N·m'],A:[1,'m/s²'],E:[1,'J']},
+  tec:{L:[100,'cm'],F:[1/G0,'kgf'],m:[1/980.665,'kgf·s²/cm'],I:[1/0.0980665,'kgf·cm·s²'],T:[1/0.0980665,'kgf·cm'],A:[100,'cm/s²'],E:[1/0.0980665,'kgf·cm']}};
+const uf=q=>UN[SYS][q][0], uu=q=>UN[SYS][q][1];
+const fq=(x,q,d)=>fmt(x*uf(q),d??UN[SYS][q][2])+' '+uu(q);           // valor SI -> texto en unidades de pantalla
+const bv=(x,q)=>x*BU[SYS][q][0], bu=q=>BU[SYS][q][1];                  // valor SI -> unidad base
+const fb=(x,q,d=3)=>fmt(bv(x,q),d);
+const fbu=(x,q,d=3)=>fmt(bv(x,q),d)+' '+bu(q);
+const isT=()=>SYS==='tec';
+const mLab=()=>isT()?'Peso W':'Masa m';
+const niceUp=v=>{ if(!(v>0)) return 1; const e=10**Math.floor(Math.log10(v)); for(const f of [1,1.2,1.5,2,2.5,3,4,5,6,8,10]) if(f*e>=v*1.0001) return f*e; return 10*e; };
+const decFor=v=>v>=100?0:v>=10?1:v>=1?2:v>=.1?3:4;
+const ang360=a=>((a%360)+360)%360;
+
+/* símbolo de centro de gravedad (círculo con dos cuadrantes llenos) */
+function cgMark(p,rpx=7,col){ const P=S(p); col=col||C.ink; ctx.save(); ctx.fillStyle=C.panel; ctx.strokeStyle=col; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.arc(P.x,P.y,rpx,0,7); ctx.fill(); ctx.fillStyle=col;
+  ctx.beginPath(); ctx.moveTo(P.x,P.y); ctx.arc(P.x,P.y,rpx,-Math.PI/2,0); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(P.x,P.y); ctx.arc(P.x,P.y,rpx,Math.PI/2,Math.PI); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.arc(P.x,P.y,rpx,0,7); ctx.stroke(); ctx.restore(); }
+/* eje perpendicular al plano (punto con círculo) */
+function axisZ(p,col){ const P=S(p); ctx.save(); ctx.strokeStyle=col; ctx.fillStyle=col; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(P.x,P.y,9,0,7); ctx.stroke(); ctx.beginPath(); ctx.arc(P.x,P.y,2.6,0,7); ctx.fill(); ctx.restore(); }
+/* ejes locales x-y en un punto */
+function localAxes(p,len,col){ const P=S(p); ctx.save(); ctx.strokeStyle=col; ctx.fillStyle=col; ctx.lineWidth=1.1; ctx.setLineDash([4,3]);
+  ctx.beginPath(); ctx.moveTo(P.x-len*.35,P.y); ctx.lineTo(P.x+len,P.y); ctx.moveTo(P.x,P.y+len*.35); ctx.lineTo(P.x,P.y-len); ctx.stroke(); ctx.setLineDash([]);
+  head(V(P.x+len,P.y),V(1,0),col); head(V(P.x,P.y-len),V(0,-1),col); ctx.restore();
+  label('x',V(P.x+len+8,P.y),col,'left',true,0,0,11); label('y',V(P.x,P.y-len-9),col,'center',true,0,0,11); }
+/* barra con extremos redondeados (eslabón) */
+function linkBar(a,b,wmm,fill,stroke){ const d=nrm(sub(b,a)), n=V(-d.y,d.x), r=wmm/2, ang=Math.atan2(d.y,d.x);
+  const pts=arcPts(b,r,ang-Math.PI/2,ang+Math.PI/2,20).concat(arcPts(a,r,ang+Math.PI/2,ang+3*Math.PI/2,20));
+  path(pts,{fill,stroke,w:1.6,close:true}); }
+function hatchedBox(pts,col){ path(pts,{fill:rgba(col,.5),stroke:col,w:1.6,close:true}); }
+function panelTitle(t,p,col){ label(t,p,col||C.muted,'center',false,0,0,12.5); }
+
+/* =====================================================================
+   01 · PROPIEDADES DE MASA — EL MAZO
+   ===================================================================== */
+const MAT_C={acero:[7850,'Acero'],bronce:[8800,'Bronce'],alum:[2700,'Aluminio'],goma:[1150,'Goma']};
+const MAT_M={madera:[650,'Madera'],fibra:[1900,'Fibra de vidrio'],acero:[7850,'Tubo de acero']};
+function mazoCalc(s,g){ const rhoC=MAT_C[s.mc][0], rhoM=s.mm==='acero'?7850*(1-(1-.0016/s.rm)**2):MAT_M[s.mm][0]; // tubo: espesor 1,6 mm
+  const mM=rhoM*Math.PI*s.rm**2*s.lm, mC=rhoC*Math.PI*s.rc**2*s.hc, m=mM+mC, lc=s.lm+s.rc;
+  const IHH=mM*(3*s.rm**2+s.lm**2)/12, IDD=mC*(3*s.rc**2+s.hc**2)/12;
+  const dM=s.lm/2-g, dC=lc-g, IZM=IHH+mM*dM**2, IZC=IDD+mC*dC**2, IZZ=IZM+IZC;
+  const d=(mM*dM+mC*dC)/m, IGG=IZZ-m*d**2, k=Math.sqrt(IZZ/m);
+  return {rhoC,rhoM,mM,mC,m,lc,IHH,IDD,dM,dC,IZM,IZC,IZZ,d,IGG,k}; }
+const MASA={
+  title:'Propiedades de masa · el mazo',
+  hint:'Arrastrá el eje ZZ (la muñeca) a lo largo del mango, o la cabeza para cambiar el largo',
+  def:{lm:.30,rm:.012,hc:.10,rc:.022,mc:'acero',mm:'madera',g:0,w:15,al:60,eq:true},
+  ui:[
+    {h:'Material',items:[
+      {t:'seg',k:'mc',opts:Object.entries(MAT_C).map(([k,v])=>[k,v[1]])},
+      {t:'seg',k:'mm',opts:Object.entries(MAT_M).map(([k,v])=>[k,v[1].replace('Fibra de vidrio','Fibra').replace('Tubo de acero','Tubo')])}]},
+    {h:'Geometría',items:[
+      {t:'range',k:'lm',l:'Largo del mango lm',q:'L',si:[150,450,5],tec:[15,45,.5]},
+      {t:'range',k:'rm',l:'Radio del mango rm',q:'L',si:[8,20,.5],tec:[.8,2,.05],d:{si:1,tec:2}},
+      {t:'range',k:'hc',l:'Largo de la cabeza',q:'L',si:[50,160,2],tec:[5,16,.2],d:{si:0,tec:1}},
+      {t:'range',k:'rc',l:'Radio de la cabeza rc',q:'L',si:[12,35,.5],tec:[1.2,3.5,.05],d:{si:1,tec:2}}]},
+    {h:'Cómo se lo sujeta',items:[
+      {t:'range',k:'g',l:'Posición de la mano (eje ZZ)',q:'L',si:[0,s=>Math.round(s.lm*900),1],tec:[0,s=>Math.round(s.lm*90*10)/10,.1],d:{si:0,tec:1}},
+      {t:'range',k:'w',l:'Velocidad angular ω',min:2,max:40,step:.5,u:'rad/s',d:1},
+      {t:'range',k:'al',l:'Aceleración angular α',min:0,max:200,step:5,u:'rad/s²'},
+      {t:'chk',k:'eq',l:'Modelo equivalente (radio de giro)'}]},
+    {h:'Momento de inercia según dónde se sujeta',items:[{t:'chart',id:'ch-masa'}]},
+    {h:'Cálculo',items:[{t:'state'},{t:'calc'}]}],
+  fix(s){ s.g=clamp(s.g,0,s.lm*.9); },
+  compute(s){ const R=mazoCalc(s,s.g); R.E=.5*R.IZZ*s.w**2; R.T=R.IZZ*s.al; R.R0=mazoCalc(s,0); R.share=R.IZC/R.IZZ; return R; },
+  bbox(s){ const L=s.lm*1000, rc=s.rc*1000, h=s.hc*1000; return [-60, -h/2-(s.eq?150:60), L+2*rc+40, h/2+70]; },
+  draw(s,R){ const L=s.lm*1000, rm=s.rm*1000, rc=s.rc*1000, hc=s.hc*1000, lc=R.lc*1000, g=s.g*1000;
+    // mango
+    path([V(0,-rm),V(L,-rm),V(L,rm),V(0,rm)],{fill:s.mm==='madera'?rgba(C.b1,.28):rgba(C.steel||C.muted,.9),stroke:C.ink,w:1.4,close:true});
+    // cabeza (cilindro visto de costado)
+    path([V(L,-hc/2),V(L+2*rc,-hc/2),V(L+2*rc,hc/2),V(L,hc/2)],{fill:s.mc==='goma'?rgba(C.ink,.55):C.steel,stroke:C.ink,w:1.6,close:true});
+    [-.5,.5].forEach(f=>line(V(L,f*hc),V(L+2*rc,f*hc),C.ink,1.6));
+    // ejes de cada parte
+    line(V(L/2,-hc/2-6),V(L/2,hc/2+6),C.muted,1,[5,3,1,3]); line(V(lc,-hc/2-10),V(lc,hc/2+10),C.muted,1,[5,3,1,3]);
+    label('HH',V(L/2,hc/2+14),C.muted,'center'); label('DD',V(lc,hc/2+18),C.muted,'center');
+    cgMark(V(L/2,0),5.5,C.muted); cgMark(V(lc,0),5.5,C.muted);
+    // CG global
+    const xG=g+R.d*1000; cgMark(V(xG,0),8,C.accent); label('CG',V(xG,0),C.accent,'center',false,0,-18);
+    // mano / eje ZZ
+    const hand=[V(g-14,-rm-6),V(g+14,-rm-6),V(g+14,rm+6),V(g-14,rm+6)]; path(hand,{fill:rgba(C.geo,.22),stroke:C.geo,w:1.2,dash:[3,2],close:true});
+    axisZ(V(g,0),C.geo); label('ZZ',V(g,0),C.geo,'center',false,0,30);
+    curl(V(g,0),34,.35*Math.PI,.7*Math.PI,C.l2,'ω, α');
+    // cotas
+    const yd=-hc/2-26; dim(V(g,yd),V(xG,yd),0,'d = '+fq(R.d,'L'),C.accent,V(g,-rm),V(xG,-rm));
+    dim(V(0,hc/2+40),V(L,hc/2+40),0,'lm',null,V(0,rm),V(L,rm));
+    // modelo equivalente: masa puntual a la distancia k
+    if(s.eq){ const ye=-hc/2-100, xk=g+R.k*1000; line(V(g,ye),V(xk,ye),C.b2,2.2); axisZ(V(g,ye),C.b2);
+      const rp=clamp(6+R.m*4,7,16); dotp(V(xk,ye),rp,C.b2);
+      label('modelo equivalente: toda la masa a la distancia k',V(g,ye),C.b2,'left',false,0,24);
+      dim(V(g,ye+18),V(xk,ye+18),0,'k = '+fq(R.k,'L'),C.b2); } },
+  handles(s){ return [
+    {p:V(s.g*1000,0),set:w=>{ s.g=clamp(w.x/1000,0,s.lm*.9); }},
+    {p:V((s.lm+2*s.rc)*1000,0),set:w=>{ s.lm=clamp(Math.round((w.x/1000-s.rc)*200)/200,.15,.45); }}]; },
+  readout(s,R){ return [['Masa total',fq(R.m,'M')+(isT()?' (peso)':''),1],['Mango / cabeza',fmt(R.mM/R.m*100,0)+' % / '+fmt(R.mC/R.m*100,0)+' %'],
+    ['CG desde ZZ  d',fq(R.d,'L')],['I_GG',fq(R.IGG,'I')],['I_ZZ',fq(R.IZZ,'I'),1],['Radio de giro k',fq(R.k,'L')],
+    ['Aporte de la cabeza',fmt(R.share*100,1)+' %'],['Energía ½·I·ω²',fq(R.E,'E'),1],['Par T = I·α',fq(R.T,'T')]]; },
+  state(s,R){ const rel=R.IZZ/R.R0.IZZ;
+    if(s.g<.02*s.lm) return ['ok',`Sujeto del extremo: máximo I_ZZ. La cabeza aporta el ${fmt(R.share*100,0)} % del momento de inercia con el ${fmt(R.mC/R.m*100,0)} % de la masa.`];
+    return [rel<.5?'bad':'warn',`Sujetándolo a ${fq(s.g,'L')} del extremo, I_ZZ cae al ${fmt(rel*100,0)} % y la energía disponible para el golpe también. Por eso cuesta menos moverlo… y clava peor.`]; },
+  calc(s,R){ const T=isT(), mm=bv(R.mM,'m'), mc=bv(R.mC,'m'), L=x=>fb(x,'L',T?2:4), Iu=bu('I'), d=T?4:6;
+    return [
+      `<span class="c">Masas (volumen × densidad${T?'; en el sistema técnico m = W/g':''}):</span>`,
+      `m<sub>m</sub> = ρ·π·r<sub>m</sub>²·l<sub>m</sub> = <span class="v">${fbu(R.mM,'m',T?6:4)}</span>   m<sub>c</sub> = <span class="v">${fbu(R.mC,'m',T?6:4)}</span>`,
+      `<span class="c">CG global respecto del eje ZZ (suma de momentos másicos):</span>`,
+      `d = (m<sub>m</sub>·(l<sub>m</sub>/2 − g) + m<sub>c</sub>·(l<sub>c</sub> − g)) / (m<sub>m</sub>+m<sub>c</sub>) = <span class="v">${fbu(R.d,'L',T?2:4)}</span>`,
+      `<span class="c">Inercia de cada parte respecto de su propio CG:</span>`,
+      `I<sub>HH</sub> = m<sub>m</sub>(3r<sub>m</sub>² + l<sub>m</sub>²)/12 = <span class="v">${fmt(bv(R.IHH,'I'),d)} ${Iu}</span>`,
+      `I<sub>DD</sub> = m<sub>c</sub>(3r<sub>c</sub>² + h<sub>c</sub>²)/12 = <span class="v">${fmt(bv(R.IDD,'I'),d)} ${Iu}</span>`,
+      `<span class="c">Transferencia al eje ZZ (Steiner):</span>`,
+      `I<sub>ZZ</sub> = [I<sub>HH</sub> + m<sub>m</sub>·${L(R.dM)}²] + [I<sub>DD</sub> + m<sub>c</sub>·${L(R.dC)}²]`,
+      `I<sub>ZZ</sub> = <span class="v">${fmt(bv(R.IZM,'I'),d)}</span> + <span class="v">${fmt(bv(R.IZC,'I'),d)}</span> = <span class="v">${fmt(bv(R.IZZ,'I'),d)} ${Iu}</span>`,
+      `k = √(I<sub>ZZ</sub>/m) = <span class="v">${fbu(R.k,'L',T?2:4)}</span>  &gt;  d = ${fbu(R.d,'L',T?2:4)}`,
+      `E<sub>C</sub> = ½·I<sub>ZZ</sub>·ω² = <span class="v">${fbu(R.E,'E',2)}</span>`]; },
+  charts(s,R){ const n=60, xs=[], tot=[], head=[]; for(let i=0;i<=n;i++){ const g=s.lm*.9*i/n, r=mazoCalc(s,g); xs.push(g*uf('L')); tot.push(r.IZZ*uf('I')); head.push(r.IZC*uf('I')); }
+    const ym=niceUp(Math.max(...tot)); chart('ch-masa',{xs,series:[{ys:tot,col:C.accent},{ys:head,col:C.b2,dash:[5,4],w:1.6}],xr:[0,xs[n]],yr:[0,ym],yd:decFor(ym/4),xd:isT()?1:0,
+      xl:'posición de la mano ['+uu('L')+']',yl:'I_ZZ ['+uu('I')+']  — total · · cabeza',marks:[{x:s.g*uf('L'),y:R.IZZ*uf('I'),col:C.accent}]}); },
+  steps:[
+    {t:'Bien sujeto',p:'El mazo tomado del extremo del mango. Mirá el aporte de la cabeza al I_ZZ: con mucho menos que la mitad del largo, se lleva casi todo el momento de inercia. ¿Por qué pesa tanto la distancia?',set:{g:0,mc:'acero',mm:'madera'}},
+    {t:'Tomado cerca de la cabeza',p:'Corré la mano hacia la cabeza. I_ZZ cae con el cuadrado de la distancia: el par para acelerarlo baja, pero también la energía ½·I·ω² que lleva al golpe. Así lo agarra un chico.',set:{g:.2},flash:'g'},
+    {t:'Radio de giro',p:'El modelo equivalente concentra toda la masa a la distancia k. Comprobá que k siempre resulta mayor que d: I_ZZ = I_GG + m·d² = m·k².',set:{g:0,eq:true}},
+    {t:'Cambiar el material',p:'Probá una cabeza de goma o de aluminio, o un mango de tubo de acero. ¿Qué pesa más en I_ZZ: la masa del mango o la de la cabeza?',set:{mc:'goma'}},
+    {t:'En unidades técnicas',p:'Pasá a Técnico arriba. Las masas se expresan como peso (kgf) y las cuentas usan m = W/g en kgf·s²/cm, como en el apunte.',set:{mc:'acero',sys:'tec'}}]};
+
+/* =====================================================================
+   02 · MÉTODO DEL PÉNDULO
+   ===================================================================== */
+function Kell(k){ let a=1,b=Math.sqrt(1-k*k); for(let i=0;i<20;i++){ const a2=(a+b)/2; b=Math.sqrt(a*b); a=a2; } return Math.PI/(2*a); }
+const SIM={th:0,om:0,t:0,key:'',trace:[]};
+function pendRHS(th,om,w2){ return [om,-w2*Math.sin(th)]; }
+function rk4(th,om,w2,h){ const [a1,b1]=pendRHS(th,om,w2), [a2,b2]=pendRHS(th+a1*h/2,om+b1*h/2,w2), [a3,b3]=pendRHS(th+a2*h/2,om+b2*h/2,w2), [a4,b4]=pendRHS(th+a3*h,om+b3*h,w2);
+  return [th+h*(a1+2*a2+2*a3+a4)/6, om+h*(b1+2*b2+2*b3+b4)/6]; }
+const PEND={
+  title:'Momento de inercia por el método del péndulo',
+  hint:'Arrastrá el extremo de la biela para elegir desde qué ángulo se la suelta',
+  def:{m:1.5,r:.11,IG:.012,th0:8,N:10,dt:0,comp:true},
+  ui:[
+    {h:'La pieza (biela)',items:[
+      {t:'range',k:'m',l:mLab,q:'M',si:[.3,5,.05],tec:[.3,5,.05],d:2},
+      {t:'range',k:'r',l:'Distancia del filo al CG r',q:'L',si:[30,250,1],tec:[3,25,.1],d:{si:0,tec:1}},
+      {t:'range',k:'IG',l:'I_G real (lo que queremos medir)',q:'I',si:[.002,.05,.0005],tec:[.02,.5,.005],d:{si:4,tec:3}}]},
+    {h:'El ensayo',items:[
+      {t:'range',k:'th0',l:'Amplitud inicial θmáx',min:2,max:60,step:1,u:'°'},
+      {t:'range',k:'N',l:'Ciclos cronometrados',min:1,max:30,step:1},
+      {t:'range',k:'dt',l:'Error de cronometraje ±Δt',min:0,max:.4,step:.02,u:'s',d:2},
+      {t:'chk',k:'comp',l:'Componentes del peso'}]},
+    {h:'Oscilación: real (no lineal) y modelo sen θ ≈ θ',items:[{t:'chart',id:'ch-pend'}]},
+    {h:'Cálculo',items:[{t:'state'},{t:'calc'}]}],
+  compute(s){ const Wt=s.m*G0, IZZ=s.IG+s.m*s.r**2, w2=Wt*s.r/IZZ, tau0=2*Math.PI/Math.sqrt(w2);
+    const th0=s.th0*DEG, tau=tau0*2*Kell(Math.sin(th0/2))/Math.PI;
+    const Izz_m=Wt*s.r*(tau/2/Math.PI)**2, IG_m=Izz_m-s.m*s.r**2;
+    const errT=(tau/tau0-1)*100, errI=(IG_m/s.IG-1)*100;
+    const dtau=s.dt/s.N, IGlo=Wt*s.r*((tau-dtau)/2/Math.PI)**2-s.m*s.r**2, IGhi=Wt*s.r*((tau+dtau)/2/Math.PI)**2-s.m*s.r**2;
+    const amp=IZZ/s.IG; // factor de amplificación del error relativo
+    // curva no lineal para el gráfico (2 períodos lineales)
+    const n=300, T2=2.2*tau0, h=T2/n, xs=[], yr=[], yl=[]; let th=th0, om=0;
+    for(let i=0;i<=n;i++){ xs.push(i*h); yr.push(th/DEG); yl.push(s.th0*Math.cos(Math.sqrt(w2)*i*h)); for(let j=0;j<4;j++) [th,om]=rk4(th,om,w2,h/4); }
+    const key=[s.m,s.r,s.IG,s.th0].join('|'); if(SIM.key!==key){ SIM.key=key; SIM.th=th0; SIM.om=0; SIM.t=0; }
+    return {Wt,IZZ,w2,tau0,tau,Izz_m,IG_m,errT,errI,dtau,IGlo,IGhi,amp,xs,yr,yl,T2}; },
+  bbox(s){ const r=s.r*1000, Lb=r*1.45; return [-1.05*Lb-.2*r,-Lb-.55*r,1.05*Lb+.2*r,.42*r]; },
+  draw(s,R){ const r=s.r*1000, Lb=r*1.45, th=SIM.th, u=V(Math.sin(th),-Math.cos(th)), n=V(-u.y,u.x);
+    // soporte con filo de cuchillo
+    const wb=.32*r; path([V(0,0),V(-wb*.45,.28*r),V(wb*.45,.28*r)],{fill:C.steel,stroke:C.ink,w:1.4,close:true});
+    path([V(-1.0*Lb,.28*r),V(1.0*Lb,.28*r)],{stroke:C.ink,w:2});
+    for(let x=-Lb;x<Lb;x+=Math.max(8,r*.12)) line(V(x,.28*r),V(x+r*.08,.36*r),C.ink,1);
+    // amplitud
+    const A=s.th0*DEG; [A,-A].forEach(a=>line(V(0,0),V(Lb*Math.sin(a)*1.08,-Lb*Math.cos(a)*1.08),C.line,1,[4,4]));
+    line(V(0,0),V(0,-Lb*1.15),C.muted,1,[6,4]);
+    // biela
+    const re=.17*r, rb=.33*r, cE=mul(u,re*.9), cB=mul(u,Lb), w1=.13*r, w2b=.26*r;
+    const body=[add(cE,mul(n,w1)),add(cB,mul(n,w2b)),sub(cB,mul(n,w2b)),sub(cE,mul(n,w1))];
+    path(body,{fill:C.steel,stroke:C.ink,w:1.4,close:true});
+    circle(cE,re+.08*r,C.ink,1.4,C.steel); circle(cB,rb+.1*r,C.ink,1.4,C.steel);
+    circle(cE,re,C.ink,1.2,C.canvas); circle(cB,rb,C.ink,1.2,C.canvas);
+    path([V(0,0),V(-wb*.45,.28*r),V(wb*.45,.28*r)],{fill:C.steel,stroke:C.ink,w:1.4,close:true});
+    dotp(V(0,0),3,C.ink); label('ZZ',V(0,0),C.ink,'left',false,14,-6);
+    const G=mul(u,s.r*1000); cgMark(G,7,C.accent); label('CG',G,C.accent,'left',false,12,0);
+    // ángulo
+    if(Math.abs(th)>.01){ path(arcPts(V(0,0),.55*r,-Math.PI/2,-Math.PI/2+th,24),{stroke:C.l2,w:1.6}); label('θ',add(V(0,0),mul(ue(-Math.PI/2+th/2),.55*r+14/view.s)),C.l2,'center'); }
+    // peso y su componente
+    const k=90/(s.m*G0); arrow(G,V(0,-1),s.m*G0*k,C.geo,'W');
+    if(s.comp){ const sn=Math.sin(th); const tdir=mul(n,-Math.sign(th)||1);
+      if(Math.abs(sn)>.02) arrow(G,tdir,Math.abs(s.m*G0*sn)*k,C.b1,'W·sen θ',{dash:[5,3]});
+      arrow(G,u,s.m*G0*Math.cos(th)*k,C.muted,'',{dash:[3,3],w:1.6}); }
+    dim(V(0,0),G,-28,'r',C.muted);
+    label(`t = ${fmt(SIM.t,2)} s`,V(16,104),C.muted,'left',true); },
+  handles(s){ const Lb=s.r*1450, th=SIM.th; return [{p:V(Lb*Math.sin(th),-Lb*Math.cos(th)),set:w=>{ const a=Math.atan2(w.x,-w.y)/DEG; s.th0=clamp(Math.round(Math.abs(a)),2,60); SIM.key=''; }}]; },
+  readout(s,R){ return [['Período lineal τ₀',fmt(R.tau0,4)+' s'],['Período real τ',fmt(R.tau,4)+' s',1],['Diferencia',fmt(R.errT,2)+' %'],
+    ['I_ZZ medido',fq(R.Izz_m,'I'),1],['I_G medido',fq(R.IG_m,'I'),1],['I_G real',fq(s.IG,'I')],['Error en I_G',fmt(R.errI,2)+' %'],
+    ['I_G con ±Δt/N',fmt(R.IGlo*uf('I'),UN[SYS].I[2])+' … '+fmt(R.IGhi*uf('I'),UN[SYS].I[2])]]; },
+  state(s,R){ const e=Math.max(Math.abs(R.errI),Math.abs(R.IGhi-R.IGlo)/2/s.IG*100);
+    if(e<1) return ['ok',`Error en I_G menor al 1 %. Amplitud chica y suficientes ciclos cronometrados.`];
+    if(e<5) return ['warn',`Error en I_G de ${fmt(e,1)} %. Cada 1 % de error en τ se multiplica por ${fmt(2*R.amp,1)} en I_G (I_ZZ/I_G = ${fmt(R.amp,1)}).`];
+    return ['bad',`Error en I_G de ${fmt(e,0)} %: ${Math.abs(R.errI)>Math.abs(R.IGhi-R.IGlo)/2/s.IG*100?'la amplitud es grande y sen θ ≈ θ ya no vale':'el cronometraje domina; medí más ciclos'}. Además I_G = I_ZZ − m·r² resta dos números parecidos.`]; },
+  calc(s,R){ const T=isT(), Wb=fb(R.Wt,'F',3), rb=fb(s.r,'L',T?2:4), Iu=bu('I'), d=T?4:6;
+    return [`<span class="c">Ecuación del movimiento alrededor del filo ZZ:</span>`,
+      `−(W·sen θ)·r = I<sub>ZZ</sub>·d²θ/dt²   →   (θ chico)   d²θ/dt² = −(W·r/I<sub>ZZ</sub>)·θ`,
+      `θ = θ<sub>máx</sub>·cos(√(W·r/I<sub>ZZ</sub>)·t)   →   √(W·r/I<sub>ZZ</sub>)·τ = 2π`,
+      `<span class="c">Datos del ensayo:</span>`,
+      `W = <span class="v">${Wb} ${bu('F')}</span>   r = <span class="v">${rb} ${bu('L')}</span>   τ = <span class="v">${fmt(R.tau,4)} s</span> (${s.N} ciclos en ${fmt(R.tau*s.N,2)} s)`,
+      `I<sub>ZZ</sub> = W·r·(τ/2π)² = ${Wb}·${rb}·(${fmt(R.tau,4)}/2π)² = <span class="v">${fmt(bv(R.Izz_m,'I'),d)} ${Iu}</span>`,
+      `I<sub>G</sub> = I<sub>ZZ</sub> − (W/g)·r² = <span class="v">${fmt(bv(R.Izz_m,'I'),d)} − ${fmt(bv(s.m,'m'),T?6:3)}·${rb}² = ${fmt(bv(R.IG_m,'I'),d)} ${Iu}</span>`,
+      `<span class="c">Con θ<sub>máx</sub> = ${s.th0}° el período real es τ = τ₀·2K(sen(θ/2))/π = τ₀·${fmt(R.tau/R.tau0,4)}. La fórmula lineal lo ignora: por eso conviene soltar la pieza desde un ángulo chico.</span>`]; },
+  charts(s,R){ const ym=s.th0<=10?Math.ceil(s.th0/2)*2:Math.ceil(s.th0/10)*10; const tm=SIM.t%R.T2;
+    let yNow=s.th0; { const i=Math.min(R.xs.length-1,Math.round(tm/R.T2*(R.xs.length-1))); yNow=R.yr[i]; }
+    chart('ch-pend',{xs:R.xs,series:[{ys:R.yl,col:C.muted,dash:[5,4],w:1.5},{ys:R.yr,col:C.accent}],xr:[0,R.T2],yr:[-ym,ym],yd:0,xd:2,
+      xl:'t [s]',yl:'θ [°]  — real · · lineal',marks:[{x:tm,y:yNow,col:C.accent}],xt:[0,R.tau0,2*R.tau0].map(x=>[x,fmt(x,2)])}); },
+  steps:[
+    {t:'Soltar desde un ángulo chico',p:'Con 8° el péndulo real y el modelo lineal casi coinciden. Medimos τ, calculamos I_ZZ = W·r·(τ/2π)² y por Steiner I_G. ¿Qué tan cerca queda del valor real?',set:{th0:8,N:10,dt:0,r:.11}},
+    {t:'Soltar desde muy alto',p:'Llevá la amplitud a 45°. El período real se alarga (la curva se atrasa respecto del modelo) y el I_G "medido" sale más grande de lo que es.',set:{th0:45,dt:0},flash:'th0'},
+    {t:'Cronometrar un solo ciclo',p:'Volvé a 8° y medí un único ciclo con ±0,2 s de reacción. Mirá el rango de I_G. Después subí a 20 ciclos: el error se divide por N.',set:{th0:8,N:1,dt:.2},flash:'N'},
+    {t:'Pivote lejos del CG',p:'Alejá el filo del CG. I_ZZ crece con m·r² y el I_G que buscamos queda como una diferencia chica entre números grandes: el mismo error en τ pesa mucho más.',set:{N:10,r:.24},flash:'r'},
+    {t:'Como en el apunte (técnico)',p:'En el sistema técnico W sale directamente en kgf y r en cm, así que I_ZZ = W·r·(τ/2π)² queda en kgf·cm·s² sin conversiones.',set:{r:.11,sys:'tec'}}]};
+
+/* =====================================================================
+   03 · PRINCIPIO DE D'ALEMBERT
+   ===================================================================== */
+let phiD=.6;
+const DAL={
+  title:"Newton y d'Alembert · masa que gira",
+  hint:'Arrastrá la masa para cambiar el radio r',
+  def:{m:.5,r:.4,w:6,al:0,vista:'newton',acc:true},
+  ui:[
+    {h:'Planteo',items:[{t:'seg',k:'vista',opts:[['newton','Newton'],['dal',"d'Alembert"]]}]},
+    {h:'Datos',items:[
+      {t:'range',k:'m',l:mLab,q:'M',si:[.1,3,.05],tec:[.1,3,.05],d:2},
+      {t:'range',k:'r',l:'Radio r',q:'L',si:[100,800,5],tec:[10,80,.5],d:{si:0,tec:1}},
+      {t:'range',k:'w',l:'Velocidad angular ω',min:0,max:20,step:.1,u:'rad/s',d:1},
+      {t:'range',k:'al',l:'Aceleración angular α',min:-60,max:60,step:1,u:'rad/s²'},
+      {t:'chk',k:'acc',l:'Aceleraciones de la masa'}]},
+    {h:'Fuerza en el pasador según ω',items:[{t:'chart',id:'ch-dal'}]},
+    {h:'Cálculo',items:[{t:'state'},{t:'calc'}]}],
+  compute(s){ const an=s.r*s.w**2, at=s.r*s.al, a=Math.hypot(an,at), F=s.m*a, Fn=s.m*an, Ft=s.m*at, T12=s.m*s.r**2*s.al;
+    return {an,at,a,F,Fn,Ft,T12}; },
+  bbox(s){ const R=s.r*1000; return [-1.35*R,-1.3*R,3.05*R,1.42*R]; },
+  draw(s,R){ const Rw=s.r*1000, u=ue(phiD), n=up(phiD), Pm=mul(u,Rw), rm=clamp(.1*Rw*Math.cbrt(s.m/.5),.05*Rw,.18*Rw), O2=V(2.25*Rw,0);
+    const dal=s.vista==='dal', kF=110/Math.max(R.F,1e-9), kA=90/Math.max(R.a,1e-9);
+    panelTitle('Eslabón 2 (la masa y su brazo)',V(0,1.3*Rw)); panelTitle('Eslabón 1 (la mano / bancada)',V(O2.x,1.3*Rw));
+    line(V(1.32*Rw,-1.2*Rw),V(1.32*Rw,1.2*Rw),C.line,1,[3,5]);
+    // trayectoria
+    circle(V(0,0),Rw,C.line,1,null,[4,5]);
+    // eslabón 2
+    linkBar(V(0,0),Pm,.05*Rw,rgba(C.l2,.18),C.l2); circle(Pm,rm,C.ink,1.5,C.steel); pin(V(0,0),C.l2); label('O₂',V(0,0),C.ink,'right',false,-12,12);
+    curl(V(0,0),Math.min(46,Rw*view.s*.25),phiD+.5,1.1,C.muted,'ω'+(s.al?(s.al>0?', α':', −α'):''));
+    if(s.acc){ if(R.an>1e-6) arrow(Pm,mul(u,-1),R.an*kA,C.l6,'aₙ = rω²');
+      if(Math.abs(R.at)>1e-6) arrow(Pm,mul(n,Math.sign(R.at)),Math.abs(R.at)*kA,C.l6,'aₜ = rα'); }
+    // fuerza del eslabón 1 sobre el 2: F12 = m·a (hacia el centro + tangencial)
+    const F12=add(mul(u,-R.Fn),mul(n,R.Ft));
+    if(R.F>1e-9) arrow(V(0,0),F12,R.F*kF,C.l2,'F₁₂',{w:2.8});
+    if(dal&&R.F>1e-9) arrow(Pm,mul(F12,-1),R.F*kF,C.b2,'−m·a',{dash:[6,4],w:2.6});
+    if(Math.abs(R.T12)>1e-9) curl(V(0,0),Math.min(30,Rw*view.s*.16),phiD+Math.PI*.8,Math.sign(R.T12)*1.3,C.warn,'T₁₂');
+    if(dal&&Math.abs(R.T12)>1e-9) curl(Pm,rm*view.s+12,phiD+Math.PI*.5,-Math.sign(R.T12)*1.2,C.b2,'',[4,3]);
+    // eslabón 1 (mano)
+    ground(O2,-Math.PI/2);
+    if(R.F>1e-9) arrow(O2,mul(F12,-1),R.F*kF,C.warn,'F₂₁ = −F₁₂',{w:2.8});
+    if(Math.abs(R.T12)>1e-9) curl(O2,26,Math.PI*.2,-Math.sign(R.T12)*1.3,C.warn,'T₂₁');
+    const msg=dal?"d'Alembert: con −m·a la masa queda en \"equilibrio\" y se resuelve como estática":'Newton: la única fuerza real sobre el eslabón 2 es F₁₂, y apunta al centro';
+    label(msg,V(16,104),dal?C.b2:C.l2,'left',true,0,0,12.5); },
+  handles(s){ const Rw=s.r*1000; return [{p:mul(ue(phiD),Rw),set:w=>{ s.r=clamp(Math.round(hyp(w)/5)*5/1000,.1,.8); phiD=Math.atan2(w.y,w.x); }}]; },
+  readout(s,R){ return [['aₙ = r·ω²',fq(R.an,'A')],['aₜ = r·α',fq(R.at,'A')],['F₁₂ (hacia el centro)',fq(R.Fn,'F'),1],['F₁₂ tangencial',fq(R.Ft,'F')],
+    ['|F₁₂| = |F₂₁|',fq(R.F,'F'),1],['T₁₂ = m·r²·α',fq(R.T12,'T')],['Inercia −m·a',fq(R.F,'F')]]; },
+  state(s,R){ if(s.vista==='newton') return ['ok','F₁₂ actúa sobre la masa y es centrípeta. La "fuerza centrífuga" que siente la mano es F₂₁, la reacción sobre el eslabón 1.'];
+    return ['warn',"La fuerza de inercia −m·a no la ejerce ningún cuerpo: es un artificio para escribir ΣF − m·a = 0 y resolver como un problema de estática. El resultado es el mismo."]; },
+  calc(s,R){ const m=fb(s.m,'m',isT()?6:3), r=fb(s.r,'L',isT()?1:3), F=x=>fbu(x,'F',3), dal=s.vista==='dal';
+    const L=[`<span class="c">Aceleración de la masa (rotación alrededor de O₂):</span>`,
+      `a<sub>n</sub> = r·ω² = ${r}·${fmt(s.w,1)}² = <span class="v">${fbu(R.an,'A',2)}</span>   a<sub>t</sub> = r·α = <span class="v">${fbu(R.at,'A',2)}</span>`];
+    if(!dal) L.push(`<span class="c">Newton sobre el eslabón 2:</span>`,
+      `ΣF<sub>n</sub>: F<sub>12n</sub> = m·r·ω² = ${m}·${r}·${fmt(s.w,1)}² = <span class="v">${F(R.Fn)}</span>`,
+      `ΣF<sub>t</sub>: F<sub>12t</sub> = m·r·α = <span class="v">${F(R.Ft)}</span>`);
+    else L.push(`<span class="c">d'Alembert: se agrega −m·a y se plantea equilibrio:</span>`,
+      `F<sub>12n</sub> − m·r·ω² = 0  →  F<sub>12n</sub> = <span class="v">${F(R.Fn)}</span>`,
+      `F<sub>12t</sub> − m·r·α = 0  →  F<sub>12t</sub> = <span class="v">${F(R.Ft)}</span>`);
+    L.push(`ΣT<sub>G</sub>: T<sub>12</sub> + R<sub>12</sub>×F<sub>12</sub> = I<sub>G</sub>·α ≈ 0  →  T<sub>12</sub> = m·r²·α = <span class="v">${fbu(R.T12,'T',3)}</span>`,
+      `Tercera ley: F<sub>21</sub> = −F<sub>12</sub>  (la que siente la mano: "centrífuga")`);
+    return L; },
+  charts(s,R){ const n=50, wm=Math.max(20,s.w), xs=[], ys=[]; for(let i=0;i<=n;i++){ const w=wm*i/n; xs.push(w); ys.push(s.m*Math.hypot(s.r*w*w,s.r*s.al)*uf('F')); }
+    const ym=niceUp(Math.max(...ys)); chart('ch-dal',{xs,series:[{ys,col:C.l2}],xr:[0,wm],yr:[0,ym],yd:decFor(ym/4),xl:'ω [rad/s]',yl:'|F₁₂| ['+uu('F')+']',marks:[{x:s.w,y:R.F*uf('F'),col:C.l2}]}); },
+  steps:[
+    {t:'Newton puro',p:'La masa gira con ω constante. La única fuerza real sobre el eslabón 2 es F₁₂, que el pasador le hace y apunta al centro: es centrípeta. ¿Dónde está la "centrífuga"?',set:{vista:'newton',al:0,w:6,acc:true}},
+    {t:'La mano siente F₂₁',p:'Mirá el eslabón 1. Por la tercera ley recibe F₂₁ = −F₁₂, hacia afuera. Esa es la fuerza que uno siente en la mano al revolear una piedra con una cuerda.',set:{vista:'newton'}},
+    {t:"Ahora con d'Alembert",p:'Pasá a d\'Alembert. Aparece −m·a sobre la masa (punteada): no la hace ningún cuerpo, pero deja todo en "equilibrio". F₁₂ sale igual. Ésta es la famosa fuerza centrífuga.',set:{vista:'dal'}},
+    {t:'Duplicar ω',p:'Llevá ω de 6 a 12 rad/s. ¿Por cuánto se multiplica la fuerza en el pasador? Fijate en el gráfico.',set:{w:12},flash:'w'},
+    {t:'Con aceleración angular',p:'Con α ≠ 0 aparece una componente tangencial m·r·α y hace falta un par motor T₁₂ = m·r²·α (masa puntual). La fuerza ya no pasa por el centro.',set:{w:6,al:40},flash:'al'}]};
+
+/* =====================================================================
+   04 · UN ESLABÓN EN ROTACIÓN PURA (Ejemplo 1)
+   ===================================================================== */
+const EJ1={L:.254,m:1.81,rg:.127,IG:.092*.0980665,th:30,w:20,al:15,FP:18.14*G0,thF:0,rp:.254,agm:'dato',aGd:50.8254,aGa:208,pes:false};
+function rotSolve(s,th){ const u=ue(th*DEG), n=up(th*DEG);
+  let aG=mul(add(mul(n,s.al),mul(u,-s.w*s.w)),s.rg);                  // aG = α×rG − ω²·rG  (m/s²)
+  if(s.agm==='dato'&&th===s.th) aG=mul(ue(s.aGa*DEG),s.aGd);
+  const R12=mul(u,-s.rg), RP=mul(u,s.rp-s.rg), FP=mul(ue(s.thF*DEG),s.FP), FW=s.pes?V(0,-s.m*G0):V(0,0);
+  // en unidades base del sistema elegido
+  const b=q=>BU[SYS][q][0], m=s.m*b('m'), Lb=b('L'), Fb=b('F');
+  const r12=mul(R12,Lb), rp=mul(RP,Lb), fp=mul(FP,Fb), fw=mul(FW,Fb), ag=mul(aG,b('A')), IG=s.IG*b('I');
+  const c1=m*ag.x-fp.x-fw.x, c2=m*ag.y-fp.y-fw.y, c3=IG*s.al-(rp.x*fp.y-rp.y*fp.x);
+  const F12x=c1, F12y=c2, T12=c3+r12.y*F12x-r12.x*F12y;
+  return {u,n,aG,R12,RP,FP,FW,r12,rp,fp,ag,m,IG,c:[c1,c2,c3],A:[[1,0,0],[0,1,0],[-r12.y,r12.x,1]],F12x,F12y,T12,
+    F12:Math.hypot(F12x,F12y),F12a:ang360(Math.atan2(F12y,F12x)/DEG),
+    F12si:V(F12x/Fb,F12y/Fb),T12si:T12/b('T')}; }
+function mtxHTML(A,B,Cc,labs){ const col=(rows,cls='')=>`<table>${rows.map(r=>`<tr>${(Array.isArray(r)?r:[r]).map(v=>`<td class="${cls}">${v}</td>`).join('')}</tr>`).join('')}</table>`;
+  return `<div class="mtxwrap"><div class="mtx"><div><div class="lab">[A]</div>${col(A)}</div><span class="op">×</span><div><div class="lab">[B]</div>${col(B,'u')}</div><span class="op">=</span><div><div class="lab">[C]</div>${col(Cc,'v')}</div></div>${labs?`<div class="lab" style="text-align:left">${labs}</div>`:''}</div>`; }
+const ROT={
+  title:'Un eslabón en rotación pura',
+  hint:'Arrastrá el extremo del eslabón para cambiar θ₂, o el punto P a lo largo de él',
+  def:{...EJ1},
+  ui:[
+    {h:'Eslabón 2',items:[
+      {t:'range',k:'L',l:'Largo O₂–extremo',q:'L',si:[100,500,1],tec:[10,50,.1],d:{si:0,tec:1}},
+      {t:'range',k:'rg',l:'Posición del CG (desde O₂)',q:'L',si:[0,s=>Math.round(s.L*1000),1],tec:[0,s=>Math.round(s.L*1000)/10,.1],d:{si:0,tec:2}},
+      {t:'range',k:'m',l:mLab,q:'M',si:[.2,10,.01],tec:[.2,10,.01],d:2},
+      {t:'range',k:'IG',l:'Momento de inercia I_G',q:'I',si:[.0005,.05,.0001],tec:[.005,.5,.001],d:{si:4,tec:3}}]},
+    {h:'Cinemática (dato)',items:[
+      {t:'range',k:'th',l:'Posición θ₂',min:0,max:360,step:1,u:'°'},
+      {t:'range',k:'w',l:'Velocidad angular ω₂',min:0,max:60,step:.5,u:'rad/s',d:1},
+      {t:'range',k:'al',l:'Aceleración angular α₂',min:-200,max:200,step:1,u:'rad/s²'},
+      {t:'seg',k:'agm',opts:[['cin','a_G calculada'],['dato','a_G del enunciado']]},
+      {t:'range',k:'aGd',l:'|a_G| del enunciado',q:'A',si:[0,200,.01],tec:[0,20000,.01],d:{si:3,tec:2},when:s=>s.agm==='dato'},
+      {t:'range',k:'aGa',l:'Ángulo de a_G',min:0,max:360,step:.5,u:'°',d:1,when:s=>s.agm==='dato'}]},
+    {h:'Fuerza exterior en P',items:[
+      {t:'range',k:'FP',l:'Fuerza F_P',q:'F',si:[0,500,.5],tec:[0,50,.01],d:{si:1,tec:2}},
+      {t:'range',k:'thF',l:'Dirección de F_P',min:0,max:360,step:1,u:'°'},
+      {t:'range',k:'rp',l:'Posición de P (desde O₂)',q:'L',si:[0,s=>Math.round(s.L*1000),1],tec:[0,s=>Math.round(s.L*1000)/10,.1],d:{si:0,tec:2}},
+      {t:'chk',k:'pes',l:'Incluir el peso del eslabón'},
+      {t:'chk',k:'dal',l:"Fuerza y par de inercia (d'Alembert)"}]},
+    {h:'Par motor a lo largo de una vuelta',items:[{t:'chart',id:'ch-rot'}]},
+    {h:'Solución matricial  [A]·[B] = [C]',items:[{t:'state'},{t:'calc'}]}],
+  fix(s){ s.rg=Math.min(s.rg,s.L); s.rp=Math.min(s.rp,s.L); },
+  compute(s){ const R=rotSolve(s,s.th); const n=72, xs=[], ys=[]; for(let i=0;i<=n;i++){ const t=360*i/n; xs.push(t); ys.push(rotSolve({...s,agm:'cin'},t).T12si*uf('T')); } R.xs=xs; R.ys=ys;
+    R.cin=rotSolve({...s,agm:'cin'},s.th); return R; },
+  bbox(s){ const L=s.L*1000; return [-1.15*L,-1.15*L,1.15*L,1.15*L]; },
+  draw(s,R){ const L=s.L*1000, u=R.u, n=R.n, E=mul(u,L), G=mul(u,s.rg*1000), P=mul(u,s.rp*1000);
+    const kF=100/Math.max(R.F12si?hyp(R.F12si):1,s.FP,s.pes?s.m*G0:0,1e-6);
+    circle(V(0,0),L,C.line,1,null,[3,6]); line(V(0,0),V(1.1*L,0),C.muted,1,[6,4]);
+    linkBar(V(0,0),E,.075*L,rgba(C.l2,.16),C.l2);
+    ground(V(0,0),-Math.PI/2); pin(V(0,0),C.l2); label('O₂',V(0,0),C.ink,'right',false,-14,12);
+    path(arcPts(V(0,0),.22*L,0,s.th*DEG,30),{stroke:C.muted,w:1.2}); label('θ₂',mul(ue(s.th*DEG/2),.22*L+16/view.s),C.muted,'center');
+    curl(V(0,0),62,s.th*DEG+.6,1.0,C.muted,'ω₂'); if(s.al) curl(V(0,0),78,s.th*DEG+.35,Math.sign(s.al)*.9,C.muted,'α₂');
+    localAxes(G,46,C.muted);
+    // vectores posición desde el CG
+    if(s.rg>1e-4) arrow(G,mul(u,-1),s.rg*1000*view.s,rgba(C.ink,.55),'',{w:1.4,dash:[2,3]});
+    if(Math.abs(s.rp-s.rg)>1e-4) arrow(G,mul(u,Math.sign(s.rp-s.rg)),Math.abs(s.rp-s.rg)*1000*view.s,rgba(C.ink,.55),'',{w:1.4,dash:[2,3]});
+    label('R₁₂',add(G,mul(u,-s.rg*500)),C.muted,'center',false,0,0,11); label('R_P',add(G,mul(u,(s.rp-s.rg)*500)),C.muted,'center',false,0,0,11);
+    cgMark(G,7,C.accent); label('G',G,C.accent,'left',false,-4,-16);
+    dotp(P,4,C.b1); label('P',P,C.b1,'left',false,8,12);
+    // aceleración del CG
+    const aG=R.aG, aM=hyp(aG); if(aM>1e-6) arrow(G,aG,60,C.l6,'a_G');
+    // fuerzas
+    if(s.FP>1e-6) arrow(P,R.FP,s.FP*kF,C.b1,'F_P',{tip:true});
+    if(s.pes) arrow(G,V(0,-1),s.m*G0*kF,C.geo,'W');
+    const F=R.F12si, Fm=hyp(F); if(Fm>1e-6) arrow(V(0,0),F,Fm*kF,C.l2,'F₁₂',{w:2.8});
+    if(Math.abs(R.T12si)>1e-9) curl(V(0,0),36,s.th*DEG+Math.PI,Math.sign(R.T12si)*1.4,C.warn,'T₁₂');
+    if(s.dal){ const ma=s.m*aM; if(ma>1e-6) arrow(G,mul(aG,-1),ma*kF,C.b2,'−m·a_G',{dash:[6,4]});
+      if(Math.abs(s.IG*s.al)>1e-9) curl(G,26,s.th*DEG+Math.PI/2,-Math.sign(s.al)*1.3,C.b2,'−I_G·α',[4,3]); }
+    label(`F₁₂ = ${fmt(hyp(F)*uf('F'),2)} ${uu('F')} @ ${fmt(R.F12a,2)}°`,V(16,104),C.l2,'left',true,0,0,12.5);
+    label(`T₁₂ = ${fq(R.T12si,'T')}`,V(16,124),C.warn,'left',true,0,0,12.5); },
+  handles(s){ const L=s.L*1000, u=ue(s.th*DEG); return [
+    {p:mul(u,L),set:w=>{ s.th=Math.round(ang360(Math.atan2(w.y,w.x)/DEG)); }},
+    {p:add(mul(u,s.rp*1000),mul(up(s.th*DEG),-.0001)),set:w=>{ s.rp=clamp(dot(w,u)/1000,0,s.L); }}]; },
+  readout(s,R){ const F=R.F12si; return [['a_G',fq(hyp(R.aG),'A')+' @ '+fmt(ang360(Math.atan2(R.aG.y,R.aG.x)/DEG),2)+'°'],
+    ['F₁₂x',fq(F.x,'F')],['F₁₂y',fq(F.y,'F')],['|F₁₂|',fq(hyp(F),'F'),1],['Dirección',fmt(R.F12a,2)+'°'],['T₁₂',fq(R.T12si,'T'),1],
+    ['Fuerza de inercia m·a_G',fq(s.m*hyp(R.aG),'F')],['Par de inercia I_G·α',fq(s.IG*s.al,'T')]]; },
+  state(s,R){ if(s.agm==='dato'){ const d=Math.abs(R.cin.T12-R.T12)/Math.max(1e-9,Math.abs(R.T12))*100;
+      return ['warn',`a_G tomada del enunciado. Calculada con la cinemática (α×r_G − ω²·r_G) da ${fq(hyp(R.cin.aG),'A')} @ ${fmt(ang360(Math.atan2(R.cin.aG.y,R.cin.aG.x)/DEG),2)}° y T₁₂ cambia ${fmt(d,2)} %.`]; }
+    return ['ok',`a_G = α₂×r_G − ω₂²·r_G calculada para θ₂ = ${s.th}°. Las incógnitas se suponen positivas: el signo que resulta indica su sentido real.`]; },
+  calc(s,R){ const T=isT(), d=T?2:3, f=x=>fmt(x,d), Lu=bu('L');
+    const B=['F<sub>12x</sub>','F<sub>12y</sub>','T<sub>12</sub>'];
+    const A=R.A.map(r=>r.map(v=>Math.abs(v)<1e-12?'0':(v===1?'1':fmt(v,T?2:4))));
+    const Csym=['m·a<sub>Gx</sub> − F<sub>Px</sub>','m·a<sub>Gy</sub> − F<sub>Py</sub>','I<sub>G</sub>·α − (R<sub>Px</sub>F<sub>Py</sub> − R<sub>Py</sub>F<sub>Px</sub>)'];
+    const Cn=R.c.map(v=>fmt(v,T?2:3)), res=[R.F12x,R.F12y,R.T12].map(v=>fmt(v,T?2:3));
+    return [`<span class="c">ΣF = F<sub>P</sub> + F<sub>12</sub> = m·a<sub>G</sub>   ·   ΣT = T<sub>12</sub> + R<sub>12</sub>×F<sub>12</sub> + R<sub>P</sub>×F<sub>P</sub> = I<sub>G</sub>·α</span>`,
+      `m = W/g = <span class="v">${fmt(R.m,T?5:3)} ${bu('m')}</span>   I<sub>G</sub> = <span class="v">${fmt(R.IG,T?3:5)} ${bu('I')}</span>`,
+      `R<sub>12</sub> = (<span class="v">${f(R.r12.x)}; ${f(R.r12.y)}</span>) ${Lu}   R<sub>P</sub> = (<span class="v">${f(R.rp.x)}; ${f(R.rp.y)}</span>) ${Lu}`,
+      `a<sub>G</sub> = (<span class="v">${fmt(R.ag.x,2)}; ${fmt(R.ag.y,2)}</span>) ${bu('A')}   F<sub>P</sub> = (<span class="v">${f(R.fp.x)}; ${f(R.fp.y)}</span>) ${bu('F')}`,
+      mtxHTML([['1','0','0'],['0','1','0'],['−R<sub>12y</sub>','R<sub>12x</sub>','1']],B,Csym),
+      mtxHTML(A,B,Cn,`[A] geometría · [B] incógnitas · [C] dinámica (${bu('F')}, ${bu('T')})`),
+      `F<sub>12x</sub> = <span class="v">${res[0]} ${bu('F')}</span>   F<sub>12y</sub> = <span class="v">${res[1]} ${bu('F')}</span>`,
+      `T<sub>12</sub> = C<sub>3</sub> + R<sub>12y</sub>·F<sub>12x</sub> − R<sub>12x</sub>·F<sub>12y</sub> = <span class="v">${res[2]} ${bu('T')}</span>`,
+      `F<sub>12</sub> = <span class="v">${fmt(Math.hypot(R.F12x,R.F12y),2)} ${bu('F')} @ ${fmt(R.F12a,2)}°</span>`]; },
+  charts(s,R){ const lo=Math.min(0,...R.ys), hi=Math.max(0,...R.ys), span=niceUp(Math.max(Math.abs(lo),Math.abs(hi)));
+    const yr=[lo<0?-span:0,hi>0?span:0]; if(yr[0]===yr[1]) yr[1]=1;
+    chart('ch-rot',{xs:R.xs,series:[{ys:R.xs.map(()=>0),col:C.line,w:1},{ys:R.ys,col:C.warn}],xr:[0,360],yr,yd:decFor(span/4),
+      xl:'θ₂ [°]',yl:'T₁₂ ['+uu('T')+'] (a_G calculada)',xt:[0,90,180,270,360],marks:[{x:s.th,y:R.cin.T12si*uf('T'),col:C.warn}]}); },
+  steps:[
+    {t:'Ejemplo 1 del apunte',p:'Eslabón de 25,4 cm y 1,81 kgf, CG a 12,7 cm, I_G = 0,092 kgf·cm·s², θ₂ = 30°, ω₂ = 20 rad/s, α₂ = 15 rad/s², F_P = 18,14 kgf @ 0° en el extremo. Compará con el apunte: F₁₂ = 26,81 kgf @ 189,46° y T₁₂ ≈ 235,9 kgf·cm.',set:{...EJ1,dal:false,sys:'tec'}},
+    {t:'a_G desde la cinemática',p:'Cambiá a "a_G calculada". El valor del enunciado (5082,54 cm/s² @ 208°) está redondeado; con α×r_G − ω²·r_G sale casi lo mismo. ¿Cuánto cambia T₁₂?',set:{agm:'cin'}},
+    {t:'Sin fuerza exterior',p:'Anulá F_P. Ahora F₁₂ sólo acelera la masa: F₁₂ = m·a_G. ¿Y el par? Queda T₁₂ = I_G·α + el momento de F₁₂ respecto del CG, que es I_O·α.',set:{agm:'cin',FP:0},flash:'FP'},
+    {t:"Con d'Alembert",p:'Activá la fuerza y el par de inercia. Con −m·a_G y −I_G·α el eslabón queda en equilibrio "cuasiestático": la suma de todo lo dibujado da cero.',set:{FP:18.14*G0,dal:true}},
+    {t:'Una vuelta completa',p:'Tocá "Recorrer vuelta" abajo a la derecha. Mirá cómo cambia T₁₂ con θ₂: F_P tiene dirección fija y su momento depende de la posición.',set:{dal:false,agm:'cin'}}]};
+/* =====================================================================
+   MECANISMOS — herramientas comunes
+   ===================================================================== */
+function gsolve(A,b){ const n=b.length, M=A.map((r,i)=>[...r,b[i]]);
+  for(let c=0;c<n;c++){ let p=c; for(let r=c+1;r<n;r++) if(Math.abs(M[r][c])>Math.abs(M[p][c])) p=r;
+    if(Math.abs(M[p][c])<1e-12) return null; [M[c],M[p]]=[M[p],M[c]];
+    for(let r=0;r<n;r++) if(r!==c){ const f=M[r][c]/M[c][c]; if(f) for(let k=c;k<=n;k++) M[r][k]-=f*M[c][k]; } }
+  return M.map((r,i)=>r[n]/r[i]); }
+const wrapA=a=>Math.atan2(Math.sin(a),Math.cos(a));
+/* cinemática por diferencias centrales respecto de θ2: ω = θ'·ω2, α = θ''·ω2² + θ'·α2 (claves que empiezan con t = ángulos) */
+function kinDeriv(pos,s,thDeg,w2,a2){ const h=1e-3, t=thDeg*DEG, P0=pos(s,t), Pp=pos(s,t+h), Pm=pos(s,t-h); if(!P0||!Pp||!Pm) return null;
+  const v={}, a={}; for(const k in P0){ const isA=k[0]==='t', dp=isA?wrapA(Pp[k]-P0[k]):Pp[k]-P0[k], dm=isA?wrapA(P0[k]-Pm[k]):P0[k]-Pm[k];
+    const d1=(dp+dm)/(2*h), d2=(dp-dm)/(h*h); v[k]=d1*w2; a[k]=d2*w2*w2+d1*a2; }
+  return {p:P0,v,a}; }
+const PV=(o,k)=>V(o[k+'x'],o[k+'y']);
+const BB=q=>BU[SYS][q][0];
+const sub2=(n)=>String(n).replace(/1/g,'₁').replace(/2/g,'₂').replace(/3/g,'₃').replace(/4/g,'₄');
+const Rs=(n,ax)=>`R<sub>${n}${ax}</sub>`, Fs=(n,ax)=>`F<sub>${n}${ax}</sub>`;
+const LCOL=()=>({2:C.l2,3:C.l6,4:C.l3});
+
+/* matriz grande [A]·[B] = [C] en una sola tabla, con las filas agrupadas por eslabón */
+function bigMtx(A,B,Cc,groups,numeric){ const n=A.length, m=A[0].length; let h='<table class="bm">';
+  for(let i=0;i<n;i++){ const g=groups.find(g=>i>=g[0]&&i<g[0]+g[1]); h+=`<tr class="${g&&g[3]?'g3':''}">`;
+    if(g&&i===g[0]) h+=`<td class="gl" rowspan="${g[1]}">${g[2]}</td>`;
+    for(let j=0;j<m;j++){ const v=A[i][j], z=(v==='0'); h+=`<td class="a${j===0?' al':''}${j===m-1?' ar':''}${z?' z':''}">${v}</td>`; }
+    h+=`<td class="op">${i===Math.floor((n-1)/2)?'×':''}</td><td class="u al ar">${B[i]}</td><td class="op">${i===Math.floor((n-1)/2)?'=':''}</td>`;
+    h+=`<td class="c al ar${numeric?' v':''}">${Cc[i]}</td></tr>`; }
+  return h+'</table>'; }
+const numA=A=>A.map(r=>r.map(v=>Math.abs(v)<1e-12?'0':(Math.abs(v-1)<1e-12?'1':(Math.abs(v+1)<1e-12?'−1':fmt(v,isT()?2:4)))));
+
+/* ---------- dibujo de un eslabón ---------- */
+function linkShape(pins,G,col,off){ const T=p=>add(p,off); const P=pins.map(T), g=T(G), L=hyp(sub(P[1],P[0])), w=Math.max(.045*L,6/view.s);
+  if(pins.length===2){ const d=nrm(sub(P[1],P[0])), dist=Math.abs(crs(d,sub(g,P[0])));
+    if(dist>w*.8) path([P[0],P[1],g],{fill:rgba(col,.10),stroke:rgba(col,.6),w:1.1,close:true});
+    linkBar(P[0],P[1],w,rgba(col,.18),col); }
+  cgMark(g,6,col); }
+function block(c,wmm,hmm,col,off,ang=0){ const T=p=>add(rotAbout(add(c,p),c,ang),off); path([V(-wmm/2,-hmm/2),V(wmm/2,-hmm/2),V(wmm/2,hmm/2),V(-wmm/2,hmm/2)].map(T),{fill:rgba(col,.22),stroke:col,w:1.6,close:true}); }
+function guideLine(a,b,side){ line(a,b,C.ink,1.6); const d=nrm(sub(b,a)), n=mul(V(-d.y,d.x),side), L=hyp(sub(b,a)), st=Math.max(10,14/view.s);
+  for(let t=0;t<L;t+=st){ const p=add(a,mul(d,t)); line(p,add(p,add(mul(n,st*.7),mul(d,st*.5))),C.ink,.9); } }
+
+/* fuerzas: [punto(mundo mm), vector SI, color, rótulo] */
+function drawForces(list,kF,off=V(0,0)){ list.forEach(([p,F,col,t,opt])=>{ const m=hyp(F); if(m*kF>3) arrow(add(p,off),F,m*kF,col,t,opt||{w:2.6}); }); }
+function mechBBox(pts,extra=.25){ const xs=pts.map(p=>p.x), ys=pts.map(p=>p.y); let x0=Math.min(...xs), x1=Math.max(...xs), y0=Math.min(...ys), y1=Math.max(...ys);
+  const sp=Math.max(x1-x0,y1-y0,1)*extra; return [x0-sp,y0-sp,x1+sp,y1+sp]; }
+
+/* rótulo de posición imposible */
+function noPos(msg){ label(msg||'Esa posición no se puede armar con estas longitudes',V(16,110),C.warn,'left',true,0,0,13); }
+
+/* panel: propiedades de masa de un eslabón (sección plegable) */
+function massSec(n,nom,Lk,{rmaxF=1.2}={}){ return {h:`Eslabón ${n} · ${nom}`,fold:true,sub:s=>`${fq(s['m'+n],'M')} · I_G ${fq(s['I'+n],'I')}`,items:[
+  {t:'range',k:'m'+n,l:mLab,q:'M',si:[.05,10,.005],tec:[.05,10,.005],d:3},
+  {t:'range',k:'r'+n,l:'CG: distancia desde el pivote',q:'L',si:[0,s=>Math.round(s[Lk]*1000*rmaxF),.5],tec:[0,s=>Math.round(s[Lk]*1000*rmaxF)/10,.05],d:{si:1,tec:2}},
+  {t:'range',k:'d'+n,l:'CG: ángulo desde la línea de centros',min:-180,max:180,step:1,u:'°'},
+  {t:'range',k:'I'+n,l:'Momento de inercia I_G',q:'I',si:[0,.06,.00005],tec:[0,.6,.0005],d:{si:5,tec:4}}]}; }
+const kinSec=()=>({h:'Manivela (dato cinemático)',items:[
+  {t:'range',k:'th',l:'Posición θ₂',min:0,max:360,step:1,u:'°'},
+  {t:'range',k:'w',l:'Velocidad angular ω₂',min:-200,max:200,step:1,u:'rad/s'},
+  {t:'range',k:'al',l:'Aceleración angular α₂',min:-2000,max:2000,step:5,u:'rad/s²'}]});
+const viewSec=extra=>({h:'Vista',items:[{t:'seg',k:'vista',opts:[['mec','Mecanismo'],['dcl','Cuerpos libres'],['mtx','Matrices']]},
+  {t:'chk',k:'acc',l:'Aceleraciones de los CG'},{t:'chk',k:'dal',l:"Fuerzas y pares de inercia (d'Alembert)"},...(extra||[])]});
+
+/* recorrido de una vuelta: T12 y módulos de las fuerzas en los pares */
+function cycle(s,solveFn,keys){ const xs=[], T=[], F={}; keys.forEach(k=>F[k]=[]);
+  for(let i=0;i<=72;i++){ const th=i*5, R=solveFn({...s,th,ej:false}); xs.push(th);
+    T.push(R.ok?R.T12*uf('T'):NaN); keys.forEach(k=>F[k].push(R.ok?hyp(R.F[k])*uf('F'):NaN)); }
+  return {xs,T,F}; }
+function cycleCharts(s,R,keys,cols,labs){ const cy=R.cy; if(!cy) return;
+  const fin=cy.T.filter(Number.isFinite); if(fin.length){ const lo=Math.min(0,...fin), hi=Math.max(0,...fin), sp=niceUp(Math.max(Math.abs(lo),Math.abs(hi)));
+    chart('ch-T',{xs:cy.xs,series:[{ys:cy.xs.map(()=>0),col:C.line,w:1},{ys:cy.T,col:C.warn}],xr:[0,360],yr:[lo<0?-sp:0,hi>0?sp:sp],yd:decFor(sp/4),xt:[0,90,180,270,360],
+      xl:'θ₂ [°]',yl:'T₁₂ ['+uu('T')+']',marks:R.ok?[{x:s.th,y:R.T12*uf('T'),col:C.warn}]:[]}); }
+  const all=keys.flatMap(k=>cy.F[k]).filter(Number.isFinite); if(all.length){ const ym=niceUp(Math.max(...all));
+    chart('ch-F',{xs:cy.xs,series:keys.map((k,i)=>({ys:cy.F[k],col:cols[i],w:1.8})),xr:[0,360],yr:[0,ym],yd:decFor(ym/4),xt:[0,90,180,270,360],
+      xl:'θ₂ [°]',yl:labs+' ['+uu('F')+']',marks:R.ok?keys.map((k,i)=>({x:s.th,y:hyp(R.F[k])*uf('F'),col:cols[i]})):[]}); } }
+const cycleSec=(fl)=>({h:'A lo largo de una vuelta',items:[{t:'chart',id:'ch-T'},{t:'note',x:fl},{t:'chart',id:'ch-F'}]});
+
+/* ecuaciones Newton–Euler en texto (vista Matrices) */
+function eqBlock(t,lines){ return `<div><b>${t}</b>${lines.join('<br>')}</div>`; }
+function solTable(rows){ return `<table class="soltab">${rows.map(([k,v])=>`<tr><td>${k}</td><td class="v">${v}</td></tr>`).join('')}</table>`; }
+function mtxPage(s,R,o){ if(!R.ok) return '<h4>Sin solución en esta posición</h4>';
+  const B=o.B, Cs=o.Csym, An=numA(R.A), Cn=R.C.map(v=>fmt(v,isT()?3:3));
+  return `<h4>Ecuaciones de Newton–Euler para cada eslabón móvil</h4><div class="eqs">${o.eqs.join('')}</div>
+   <h4>Forma matricial [A]·[B] = [C] — [A] geometría · [B] incógnitas · [C] dinámica</h4><div>${bigMtx(o.Asym,B,Cs,o.groups,false)}</div>
+   <h4>Con los valores de esta posición (θ₂ = ${fmt(s.th,1)}°) en ${bu('L')}, ${bu('F')}, ${bu('m')}, ${bu('A')}</h4><div>${bigMtx(An,B,Cn,o.groups,true)}</div>
+   <h4>Solución</h4>${solTable(o.sol)}${o.note?`<p class="cap" style="max-width:70ch">${o.note}</p>`:''}`; }
+
+/* dibujo común: mecanismo armado o despiezado */
+function drawMechCommon(s,R,o){ const LC=LCOL(), dcl=s.vista==='dcl';
+  const pts=o.links.flatMap(l=>l.pins.map(k=>R.pts[k]));
+  const c0=mul(pts.reduce((a,p)=>add(a,p),V(0,0)),1/pts.length), span=Math.max(...pts.map(p=>hyp(sub(p,c0))))*2;
+  const offs={}; o.links.forEach((l,i)=>{ let d=sub(R.pts[l.G],c0); if(hyp(d)<span*.02) d=ue(i*2.1+.5); offs[l.id]=dcl?mul(nrm(d),span*.24):V(0,0); });
+  if(!dcl&&o.ground) o.ground();
+  o.links.forEach(l=>{ if(l.shape) l.shape(offs[l.id]); else linkShape(l.pins.map(k=>R.pts[k]),R.pts[l.G],LC[l.id],offs[l.id]);
+    if(dcl) label('Eslabón '+l.id,add(R.pts[l.G],offs[l.id]),LC[l.id],'left',false,12,16,12); });
+  // pasadores
+  o.pins.forEach(([k,gr])=>{ if(dcl){ o.links.filter(l=>l.pins.includes(k)).forEach(l=>pin(add(R.pts[k],offs[l.id]),LC[l.id])); } else if(gr) ground(R.pts[k],-Math.PI/2); else pin(R.pts[k]); });
+  if(!dcl) o.names.forEach(([k,t,dx,dy])=>{ label(t,R.pts[k],C.ink,'center',false,dx,dy,12); });
+  const kF=110/Math.max(1e-9,...o.forceMags());
+  // giros
+  if(!dcl){ curl(R.pts.O2,48,R.ang.t2+.5,(s.w>=0?1:-1)*1.1,C.muted,'ω₂'); }
+  if(s.acc) o.links.forEach(l=>{ const a=R.aG[l.id]; if(a&&hyp(a)>1e-9) arrow(add(R.pts[l.G],offs[l.id]),a,46,C.hot,'a_G'+sub2(l.id),{w:1.8}); });
+  if(dcl) drawForces(o.dclForces(kF),kF,V(0,0)); else drawForces(o.mecForces(),kF);
+  if(Math.abs(R.T12)>1e-9) curl(add(R.pts.O2,offs[2]),30,R.ang.t2+Math.PI*.9,Math.sign(R.T12)*1.4,C.warn,'T₁₂');
+  if(o.extra) o.extra(offs,kF,dcl);
+  if(s.dal) o.links.forEach(l=>{ const G=add(R.pts[l.G],offs[l.id]), a=R.aG[l.id], m=s['m'+l.id]; if(a&&m*hyp(a)*kF>3) arrow(G,mul(a,-1),m*hyp(a)*kF,C.b2,'−m·a',{dash:[6,4],w:2.2});
+    const Ia=(s['I'+l.id]||0)*(R.alpha[l.id]||0); if(Math.abs(Ia)>1e-9) curl(G,22,Math.PI/2,-Math.sign(Ia)*1.3,C.b2,'',[4,3]); });
+  if(R.ej) label('Aceleraciones tomadas del enunciado (Ejemplo 2)',V(16,104),C.hot,'left',true,0,0,12.5);
+  label(`T₁₂ = ${fq(R.T12,'T')}`,V(16,R.ej?124:104),C.warn,'left',true,0,0,12.5); }
+
+/* =====================================================================
+   03 · MANIVELA-CORREDERA DE TRES BARRAS (con fricción en la semijunta)
+   ===================================================================== */
+function posMC3(s,t){ const Ax=s.a*Math.cos(t), Ay=s.a*Math.sin(t), dx=s.e-Ax, q=s.b*s.b-dx*dx; if(q<0) return null;
+  const By=Ay+Math.sqrt(q), t3=Math.atan2(By-Ay,dx);
+  return {t2:t,t3,Ax,Ay,Bx:s.e,By,G2x:s.r2*Math.cos(t+s.d2*DEG),G2y:s.r2*Math.sin(t+s.d2*DEG),G3x:Ax+s.r3*Math.cos(t3+s.d3*DEG),G3y:Ay+s.r3*Math.sin(t3+s.d3*DEG)}; }
+const EJ2={a:.127,b:.381,e:0,th:60,w:30,al:-10,m2:.907,r2:.0762,d2:30,I2:.058*.0980665,m3:1.814,r3:.2286,d3:45,I3:.115*.0980665,FP:22.68*G0,thF:315,dP:.0686,dPa:101,mu:.2,ej:true};
+function solveMC3(s){ const K=kinDeriv(posMC3,s,s.th,s.w,s.al); if(!K) return {ok:false};
+  const p=K.p, a=K.a, ej=!!s.ej;
+  let aG2=PV(a,'G2'), aG3=PV(a,'G3'), al2=s.al, al3=a.t3;
+  if(ej){ aG2=mul(ue(-89.4*DEG),68.5843); aG3=mul(ue(254.4*DEG),87.7151); al3=-136.16; }
+  const O2=V(0,0), A=PV(p,'A'), B=PV(p,'B'), G2=PV(p,'G2'), G3=PV(p,'G3'), P=add(G3,mul(ue(p.t3+s.dPa*DEG),s.dP)), FP=mul(ue(s.thF*DEG),s.FP);
+  const L=x=>mul(x,BB('L')), r12=L(sub(O2,G2)), r32=L(sub(A,G2)), r23=L(sub(A,G3)), r13=L(sub(B,G3)), rp=L(sub(P,G3));
+  const m2=s.m2*BB('m'), m3=s.m3*BB('m'), I2=s.I2*BB('I'), I3=s.I3*BB('I'), fp=mul(FP,BB('F')), ag2=mul(aG2,BB('A')), ag3=mul(aG3,BB('A'));
+  const vB=K.v.By, sv=Math.abs(vB)<1e-7?0:Math.sign(vB);
+  const build=k=>({A:[[1,0,1,0,0,0],[0,1,0,1,0,0],[-r12.y,r12.x,-r32.y,r32.x,0,1],[0,0,-1,0,1,0],[0,0,0,-1,k,0],[0,0,r23.y,-r23.x,k*r13.x-r13.y,0]],
+    C:[m2*ag2.x,m2*ag2.y,I2*al2,m3*ag3.x-fp.x,m3*ag3.y-fp.y,I3*al3-(rp.x*fp.y-rp.y*fp.x)]});
+  let k=-sv*s.mu, S=build(k), x=gsolve(S.A,S.C), amb=false;
+  if(x&&sv&&x[4]<0){ k=sv*s.mu; S=build(k); x=gsolve(S.A,S.C); if(x&&x[4]>0) amb=true; }
+  if(!x) return {ok:false};
+  const Fb=BB('F'), F12=V(x[0]/Fb,x[1]/Fb), F32=V(x[2]/Fb,x[3]/Fb), F13=V(x[4]/Fb,k*x[4]/Fb);
+  return {ok:true,K,ej,x,k,sv,vB,amb,A:S.A,C:S.C,T12:x[5]/BB('T'),F:{F12,F32,F13},FP,
+    pts:{O2,A,B,G2,G3,P},ang:{t2:p.t2,t3:p.t3},aG:{2:aG2,3:aG3},alpha:{2:al2,3:al3},R:{r12,r32,r23,r13,rp},m2,m3,I2,I3,fp,ag2,ag3,al3}; }
+const MC3={
+  title:'Manivela-corredera de tres barras',
+  hint:'Arrastrá el pasador A para girar la manivela',
+  def:{...EJ2,vista:'mec',acc:false,dal:false},
+  ui:[viewSec(),
+    {h:'Geometría',items:[
+      {t:'range',k:'a',l:'Manivela O₂A (eslabón 2)',q:'L',si:[20,300,.5],tec:[2,30,.05],d:{si:1,tec:2}},
+      {t:'range',k:'b',l:'Eslabón 3 de A hasta la semijunta B',q:'L',si:[60,800,.5],tec:[6,80,.05],d:{si:1,tec:2}},
+      {t:'range',k:'e',l:'Excentricidad de la guía',q:'L',si:[-150,150,.5],tec:[-15,15,.05],d:{si:1,tec:2}}]},
+    kinSec(),
+    {h:'Fuerza exterior en P (eslabón 3) y fricción',items:[
+      {t:'range',k:'FP',l:'Fuerza F_P',q:'F',si:[0,600,.5],tec:[0,60,.01],d:{si:1,tec:2}},
+      {t:'range',k:'thF',l:'Dirección de F_P',min:0,max:360,step:1,u:'°'},
+      {t:'range',k:'dP',l:'P: distancia desde G₃',q:'L',si:[0,300,.2],tec:[0,30,.02],d:{si:1,tec:2}},
+      {t:'range',k:'dPa',l:'P: ángulo desde la línea de centros',min:-180,max:180,step:1,u:'°'},
+      {t:'range',k:'mu',l:'Coeficiente de fricción μ en B',min:0,max:.6,step:.01,d:2}]},
+    massSec(2,'manivela','a'),massSec(3,'acoplador','b'),
+    cycleSec('Fuerzas en los pares: F₁₂ (azul) · F₃₂ (naranja) · F₁₃ (violeta)'),
+    {h:'Cálculo',items:[{t:'state'},{t:'calc'}]}],
+  fix(s){ s.r2=Math.min(s.r2,s.a*1.2); s.r3=Math.min(s.r3,s.b*1.2); },
+  compute(s){ const R=solveMC3(s); R.cy=cycle(s,solveMC3,['F12','F32','F13']); return R; },
+  bbox(s){ return mechBBox([V(0,0),V(s.a*1000,s.a*1000),V(-s.a*1000,-s.a*1000),V(s.e*1000,(s.a+s.b)*1000),V(s.e*1000,0)],s.vista==='dcl'?.55:.18); },
+  draw(s,R){ const ex=s.e*1000, yb=R.ok?R.pts.B.y*1000:0, Lt=(s.a+s.b)*1000;
+    if(!R.ok){ ground(V(0,0)); guideLine(V(ex,(s.b-s.a)*1000*.3),V(ex,Lt*1.05),1); noPos(); return; }
+    const S1=x=>mul(x,1000); const Rm={...R,pts:Object.fromEntries(Object.entries(R.pts).map(([k,v])=>[k,S1(v)]))};
+    drawMechCommon(s,Rm,{links:[{id:2,pins:['O2','A'],G:'G2'},{id:3,pins:['A','B'],G:'G3'}],
+      pins:[['O2',true],['A',false],['B',false]],names:[['O2','O₂',-16,14],['A','A',12,-12],['B','B',14,0]],
+      ground:()=>{ guideLine(V(ex-6,Math.max(yb-Lt*.35,0)),V(ex-6,yb+Lt*.25),1); guideLine(V(ex+6,yb+Lt*.25),V(ex+6,Math.max(yb-Lt*.35,0)),1); },
+      forceMags:()=>[hyp(R.F.F12),hyp(R.F.F32),hyp(R.F.F13),s.FP],
+      mecForces:()=>[[Rm.pts.O2,R.F.F12,C.ink,'F₁₂'],[Rm.pts.B,R.F.F13,C.ink,'F₁₃'],[Rm.pts.P,R.FP,C.b1,'F_P',{tip:true,w:2.6}]],
+      dclForces:()=>[],
+      extra:(offs,kF,dcl)=>{ dotp(add(Rm.pts.P,offs[3]),3.5,C.b1); label('P',add(Rm.pts.P,offs[3]),C.b1,'left',false,7,10);
+        if(!dcl) return; drawForces([[Rm.pts.O2,R.F.F12,C.ink,'F₁₂'],[Rm.pts.A,R.F.F32,C.ink,'F₃₂']],kF,offs[2]);
+        drawForces([[Rm.pts.A,mul(R.F.F32,-1),C.ink,'−F₃₂'],[Rm.pts.B,R.F.F13,C.ink,'F₁₃'],[Rm.pts.P,R.FP,C.b1,'F_P',{tip:true,w:2.6}]],kF,offs[3]);
+        const N=V(R.F.F13.x,0), f=V(0,R.F.F13.y); drawForces([[Rm.pts.B,N,C.muted,'N',{w:1.4,dash:[4,3]}],[Rm.pts.B,f,C.b2,'f = μN',{w:1.6}]],kF,offs[3]); }}); },
+  handles(s,R){ if(s.vista==='dcl') return []; return [{p:mul(ue(s.th*DEG),s.a*1000),set:w=>{ s.th=Math.round(ang360(Math.atan2(w.y,w.x)/DEG)); s.ej=false; }}]; },
+  readout(s,R){ if(!R.ok) return [['Posición','imposible',1]];
+    return [['θ₃',fmt(ang360(R.ang.t3/DEG),2)+'°'],['ω₃',fmt(R.K.v.t3,2)+' rad/s'],['α₃',fmt(R.alpha[3],2)+' rad/s²'],['v_B (guía)',fq(R.vB,'A').replace('/s²','/s')],
+      ['|F₁₂|',fq(hyp(R.F.F12),'F'),1],['|F₃₂|',fq(hyp(R.F.F32),'F')],['F₁₃ normal',fq(R.F.F13.x,'F')],['F₁₃ fricción',fq(R.F.F13.y,'F')],['T₁₂',fq(R.T12,'T'),1],['Potencia T₁₂·ω₂',fmt(R.T12*s.w,1)+' W']]; },
+  state(s,R){ if(!R.ok) return ['bad','Con estas longitudes el eslabón 3 no alcanza la guía en esta posición.'];
+    if(!R.sv) return ['warn','La velocidad en la semijunta es cero: el sentido de la fricción queda indefinido y se toma f = 0 (la ecuación lineal deja de valer).'];
+    return ['ok',`B ${R.sv>0?'sube':'baja'} por la guía: la fricción f = ±μN se opone. Como F₁₃x resultó ${R.x[4]<0?'negativa':'positiva'}, en la matriz entra ${R.k>=0?'+':'−'}μ = ${fmt(R.k,2)}.`+(R.ej?' Con el Ejemplo 2 del apunte.':'')]; },
+  calc(s,R){ if(!R.ok) return ['—']; const T=isT(), f=v=>fmt(v,T?2:3), r=R.R;
+    return [`<span class="c">Eslabón 2:  F₁₂ + F₃₂ = m₂·a<sub>G2</sub>   ·   T₁₂ + R₁₂×F₁₂ + R₃₂×F₃₂ = I<sub>G2</sub>·α₂</span>`,
+      `<span class="c">Eslabón 3 (con F₂₃ = −F₃₂ y F₁₃y = ±μ·F₁₃x):  F₁₃ − F₃₂ + F<sub>P</sub> = m₃·a<sub>G3</sub>   ·   R₁₃×F₁₃ − R₂₃×F₃₂ + R<sub>P</sub>×F<sub>P</sub> = I<sub>G3</sub>·α₃</span>`,
+      `m₂ = <span class="v">${fmt(R.m2,T?6:3)}</span>  m₃ = <span class="v">${fmt(R.m3,T?6:3)} ${bu('m')}</span>`,
+      `R₁₂ = (<span class="v">${f(r.r12.x)}; ${f(r.r12.y)}</span>)  R₃₂ = (<span class="v">${f(r.r32.x)}; ${f(r.r32.y)}</span>) ${bu('L')}`,
+      `R₂₃ = (<span class="v">${f(r.r23.x)}; ${f(r.r23.y)}</span>)  R₁₃ = (<span class="v">${f(r.r13.x)}; ${f(r.r13.y)}</span>)  R<sub>P</sub> = (<span class="v">${f(r.rp.x)}; ${f(r.rp.y)}</span>)`,
+      `a<sub>G2</sub> = (<span class="v">${fmt(R.ag2.x,2)}; ${fmt(R.ag2.y,2)}</span>)  a<sub>G3</sub> = (<span class="v">${fmt(R.ag3.x,2)}; ${fmt(R.ag3.y,2)}</span>) ${bu('A')}  α₃ = <span class="v">${fmt(R.al3,2)}</span>`,
+      `<span class="c">El sistema de 6×6 completo está en la vista Matrices.</span>`,
+      `F₁₂ = (<span class="v">${f(R.x[0])}; ${f(R.x[1])}</span>)  F₃₂ = (<span class="v">${f(R.x[2])}; ${f(R.x[3])}</span>) ${bu('F')}`,
+      `F₁₃x = <span class="v">${f(R.x[4])}</span>  F₁₃y = μ·F₁₃x = <span class="v">${f(R.k*R.x[4])} ${bu('F')}</span>`,
+      `T₁₂ = <span class="v">${fmt(R.x[5],2)} ${bu('T')}</span>`]; },
+  mtx(s,R){ if(!R.ok) return mtxPage(s,R,{}); const k=R.k, ks=(k>=0?'+':'−')+'μ', f=v=>fmt(v,isT()?2:3);
+    return mtxPage(s,R,{
+      eqs:[eqBlock('Eslabón 2',[`F₁₂x + F₃₂x = m₂·a<sub>G2x</sub>`,`F₁₂y + F₃₂y = m₂·a<sub>G2y</sub>`,`T₁₂ + (R₁₂x·F₁₂y − R₁₂y·F₁₂x) + (R₃₂x·F₃₂y − R₃₂y·F₃₂x) = I<sub>G2</sub>·α₂`]),
+        eqBlock('Eslabón 3',[`F₁₃x − F₃₂x = m₃·a<sub>G3x</sub> − F<sub>Px</sub>`,`${ks}·F₁₃x − F₃₂y = m₃·a<sub>G3y</sub> − F<sub>Py</sub>`,`(${ks}·R₁₃x − R₁₃y)·F₁₃x − R₂₃x·F₃₂y + R₂₃y·F₃₂x = I<sub>G3</sub>·α₃ − (R<sub>Px</sub>·F<sub>Py</sub> − R<sub>Py</sub>·F<sub>Px</sub>)`]),
+        eqBlock('Fricción en la semijunta',[`F₁₃y = ±μ·F₁₃x, opuesta a v<sub>B</sub> (${R.sv>0?'+':R.sv<0?'−':'0'}Y)`,`El signo depende también del sentido de N: se resuelve, se verifica y, si hace falta, se corrige.`])],
+      Asym:[['1','0','1','0','0','0'],['0','1','0','1','0','0'],['−'+Rs(12,'y'),Rs(12,'x'),'−'+Rs(32,'y'),Rs(32,'x'),'0','1'],['0','0','−1','0','1','0'],['0','0','0','−1',ks,'0'],['0','0',Rs(23,'y'),'−'+Rs(23,'x'),`${ks}·${Rs(13,'x')} − ${Rs(13,'y')}`,'0']],
+      B:[Fs(12,'x'),Fs(12,'y'),Fs(32,'x'),Fs(32,'y'),Fs(13,'x'),'T<sub>12</sub>'],
+      Csym:['m₂·a<sub>G2x</sub>','m₂·a<sub>G2y</sub>','I<sub>G2</sub>·α₂','m₃·a<sub>G3x</sub> − F<sub>Px</sub>','m₃·a<sub>G3y</sub> − F<sub>Py</sub>','I<sub>G3</sub>·α₃ − R<sub>Px</sub>F<sub>Py</sub> + R<sub>Py</sub>F<sub>Px</sub>'],
+      groups:[[0,3,'ESLABÓN 2',0],[3,3,'ESLABÓN 3',1]],
+      sol:[['F₁₂x',f(R.x[0])+' '+bu('F')],['F₁₂y',f(R.x[1])+' '+bu('F')],['F₃₂x',f(R.x[2])+' '+bu('F')],['F₃₂y',f(R.x[3])+' '+bu('F')],['F₁₃x (normal)',f(R.x[4])+' '+bu('F')],['F₁₃y = '+fmt(k,2)+'·F₁₃x',f(k*R.x[4])+' '+bu('F')],['T₁₂',fmt(R.x[5],2)+' '+bu('T')]],
+      note:R.ej?'Nota: en el apunte la sexta fila de [A] lleva (±μ·R₁₃x − R₃₂y); el término correcto es R₁₃y, que sale de desarrollar R₁₃×F₁₃. Además, el resultado impreso en el Ejemplo 2 es el del Ejemplo 1: estos son los valores que corresponden al sistema planteado.':''}); },
+  charts(s,R){ cycleCharts(s,R,['F12','F32','F13'],[C.l2,C.b1,C.b2],'|F₁₂| |F₃₂| |F₁₃|'); },
+  steps:[
+    {t:'Ejemplo 2 del apunte',p:'Manivela de 12,7 cm y 0,907 kgf, acoplador de 38,1 cm y 1,814 kgf, θ₂ = 60°, ω₂ = 30 rad/s, α₂ = −10 rad/s², F_P = 22,68 kgf @ −45°, μ = 0,2. Se usan las aceleraciones del enunciado. Abrí la vista Matrices y compará fila por fila.',set:{...EJ2,vista:'mec',sys:'tec'}},
+    {t:'Cuerpos libres',p:'Pasá a "Cuerpos libres". En A, el eslabón 2 recibe F₃₂ y el 3 recibe −F₃₂: se resuelve una sola fuerza por junta. En B actúan la normal y la fricción, que se opone a la velocidad de la semijunta.',set:{vista:'dcl'}},
+    {t:'Las seis ecuaciones',p:'Vista Matrices: seis ecuaciones (ΣFx, ΣFy, ΣT para cada eslabón móvil) y seis incógnitas, porque F₁₃y se reemplazó por ±μ·F₁₃x. La columna [C] junta toda la dinámica.',set:{vista:'mtx'}},
+    {t:'Sin fricción',p:'Llevá μ a cero. F₁₃ queda perpendicular a la guía y T₁₂ cambia. ¿Cuánto par se gasta en vencer el rozamiento en esta posición?',set:{vista:'mec',mu:0},flash:'mu'},
+    {t:'Una vuelta completa',p:'Tocá "Recorrer vuelta". Mirá los gráficos: las fuerzas en los pares y T₁₂ cambian mucho en un ciclo, aun con ω₂ constante. Ese T₁₂ variable es el que después suaviza un volante.',set:{mu:.2,ej:false,al:0}}]};
+
+/* =====================================================================
+   04 · CUADRILÁTERO ARTICULADO (9 × 9)
+   ===================================================================== */
+function posCuad(s,t){ const Ax=s.a*Math.cos(t), Ay=s.a*Math.sin(t), D=V(s.d-Ax,-Ay), f=hyp(D); if(f>s.b+s.c||f<Math.abs(s.b-s.c)||f<1e-9) return null;
+  const x=(s.b*s.b-s.c*s.c+f*f)/(2*f), h=Math.sqrt(Math.max(0,s.b*s.b-x*x)), u=mul(D,1/f), n=V(-u.y,u.x), sg=s.rama==='cruz'?-1:1;
+  const B=add(add(V(Ax,Ay),mul(u,x)),mul(n,sg*h)), t3=Math.atan2(B.y-Ay,B.x-Ax), t4=Math.atan2(B.y,B.x-s.d);
+  return {t2:t,t3,t4,Ax,Ay,Bx:B.x,By:B.y,G2x:s.r2*Math.cos(t+s.d2*DEG),G2y:s.r2*Math.sin(t+s.d2*DEG),
+    G3x:Ax+s.r3*Math.cos(t3+s.d3*DEG),G3y:Ay+s.r3*Math.sin(t3+s.d3*DEG),G4x:s.d+s.r4*Math.cos(t4+s.d4*DEG),G4y:s.r4*Math.sin(t4+s.d4*DEG)}; }
+function solveCuad(s){ const K=kinDeriv(posCuad,s,s.th,s.w,s.al); if(!K) return {ok:false};
+  const p=K.p, a=K.a, O2=V(0,0), O4=V(s.d,0), A=PV(p,'A'), B=PV(p,'B'), G2=PV(p,'G2'), G3=PV(p,'G3'), G4=PV(p,'G4');
+  const aG2=PV(a,'G2'), aG3=PV(a,'G3'), aG4=PV(a,'G4'), al2=s.al, al3=a.t3, al4=a.t4;
+  const P=add(G3,mul(ue(p.t3+s.dPa*DEG),s.dP)), FP=mul(ue(s.thF*DEG),s.FP);
+  const L=x=>mul(x,BB('L')), r12=L(sub(O2,G2)), r32=L(sub(A,G2)), r23=L(sub(A,G3)), r43=L(sub(B,G3)), r34=L(sub(B,G4)), r14=L(sub(O4,G4)), rp=L(sub(P,G3));
+  const w4=K.v.t4, T4si=s.tmode==='res'?-(Math.abs(w4)<1e-9?0:Math.sign(w4))*Math.abs(s.T4):s.T4;
+  const m2=s.m2*BB('m'), m3=s.m3*BB('m'), m4=s.m4*BB('m'), I2=s.I2*BB('I'), I3=s.I3*BB('I'), I4=s.I4*BB('I'), fp=mul(FP,BB('F')), T4=T4si*BB('T');
+  const ag2=mul(aG2,BB('A')), ag3=mul(aG3,BB('A')), ag4=mul(aG4,BB('A'));
+  const Am=[[1,0,1,0,0,0,0,0,0],[0,1,0,1,0,0,0,0,0],[-r12.y,r12.x,-r32.y,r32.x,0,0,0,0,1],
+    [0,0,-1,0,1,0,0,0,0],[0,0,0,-1,0,1,0,0,0],[0,0,r23.y,-r23.x,-r43.y,r43.x,0,0,0],
+    [0,0,0,0,-1,0,1,0,0],[0,0,0,0,0,-1,0,1,0],[0,0,0,0,r34.y,-r34.x,-r14.y,r14.x,0]];
+  const Cm=[m2*ag2.x,m2*ag2.y,I2*al2,m3*ag3.x-fp.x,m3*ag3.y-fp.y,I3*al3-(rp.x*fp.y-rp.y*fp.x),m4*ag4.x,m4*ag4.y,I4*al4-T4];
+  const x=gsolve(Am,Cm); if(!x) return {ok:false}; const Fb=BB('F');
+  const mu=Math.abs(wrapA(p.t3-p.t4))/DEG; const trans=mu>90?180-mu:mu;
+  return {ok:true,K,x,A:Am,C:Cm,T12:x[8]/BB('T'),F:{F12:V(x[0]/Fb,x[1]/Fb),F32:V(x[2]/Fb,x[3]/Fb),F43:V(x[4]/Fb,x[5]/Fb),F14:V(x[6]/Fb,x[7]/Fb)},FP,trans,T4:T4si,w4,
+    pts:{O2,O4,A,B,G2,G3,G4,P},ang:{t2:p.t2,t3:p.t3,t4:p.t4},aG:{2:aG2,3:aG3,4:aG4},alpha:{2:al2,3:al3,4:al4},R:{r12,r32,r23,r43,r34,r14,rp}}; }
+function grashof(s){ const L=[s.a,s.b,s.c,s.d].sort((x,y)=>x-y), g=L[0]+L[3]<=L[1]+L[2]+1e-12, sh=Math.min(s.a,s.b,s.c,s.d);
+  if(!g) return 'No Grashof: ningún eslabón da la vuelta completa (triple balancín).';
+  if(sh===s.a) return 'Grashof, manivela-balancín: la manivela 2 da vueltas completas.';
+  if(sh===s.d) return 'Grashof, doble manivela.'; return 'Grashof con el eslabón más corto fuera de la manivela: la manivela no gira completa.'; }
+const CUAD={
+  title:'Cuadrilátero articulado',
+  hint:'Arrastrá A para girar la manivela, u O₄ para cambiar la bancada',
+  def:{a:.10,b:.30,c:.25,d:.28,rama:'abierto',th:60,w:50,al:0,m2:.5,r2:.05,d2:0,I2:.00042,m3:1.5,r3:.15,d3:0,I3:.0113,m4:1.0,r4:.125,d4:0,I4:.0052,
+    FP:2.14*G0,thF:270,dP:0,dPa:0,T4:4.46*.0980665,tmode:'res',vista:'mec',acc:false,dal:false},
+  ui:[viewSec([{t:'seg',k:'rama',opts:[['abierto','Abierto'],['cruz','Cruzado']]}]),
+    {h:'Longitudes',items:[
+      {t:'range',k:'a',l:'Manivela O₂A (2)',q:'L',si:[20,300,1],tec:[2,30,.1],d:{si:0,tec:1}},
+      {t:'range',k:'b',l:'Acoplador AB (3)',q:'L',si:[50,600,1],tec:[5,60,.1],d:{si:0,tec:1}},
+      {t:'range',k:'c',l:'Balancín O₄B (4)',q:'L',si:[50,600,1],tec:[5,60,.1],d:{si:0,tec:1}},
+      {t:'range',k:'d',l:'Bancada O₂O₄ (1)',q:'L',si:[50,600,1],tec:[5,60,.1],d:{si:0,tec:1}}]},
+    kinSec(),
+    {h:'Cargas exteriores',items:[
+      {t:'range',k:'FP',l:'Fuerza F_P sobre el acoplador',q:'F',si:[0,400,.5],tec:[0,40,.01],d:{si:1,tec:2}},
+      {t:'range',k:'thF',l:'Dirección de F_P',min:0,max:360,step:1,u:'°'},
+      {t:'range',k:'dP',l:'P: distancia desde G₃',q:'L',si:[0,300,1],tec:[0,30,.1],d:{si:0,tec:1}},
+      {t:'range',k:'dPa',l:'P: ángulo desde la línea de centros',min:-180,max:180,step:1,u:'°'},
+      {t:'range',k:'T4',l:'Par exterior T₄ sobre el balancín',q:'T',si:[-20,20,.05],tec:[-200,200,.1],d:{si:2,tec:1}},
+      {t:'seg',k:'tmode',opts:[['res','T₄ siempre contra ω₄'],['fijo','T₄ de sentido fijo']]}]},
+    massSec(2,'manivela','a'),massSec(3,'acoplador','b'),massSec(4,'balancín','c'),
+    cycleSec('Fuerzas en los pares: F₁₂ (azul) · F₃₂ (naranja) · F₄₃ (verde) · F₁₄ (violeta)'),
+    {h:'Cálculo',items:[{t:'state'},{t:'calc'}]}],
+  fix(s){ s.r2=Math.min(s.r2,s.a*1.2); s.r3=Math.min(s.r3,s.b*1.2); s.r4=Math.min(s.r4,s.c*1.2); },
+  compute(s){ const R=solveCuad(s); R.cy=cycle(s,solveCuad,['F12','F32','F43','F14']); R.gr=grashof(s); return R; },
+  bbox(s){ const r=Math.max(s.a,s.c)*1000; return mechBBox([V(-s.a*1000,-r),V(s.d*1000+s.c*1000,r+s.b*300),V(0,s.a*1000+s.b*500)],s.vista==='dcl'?.5:.12); },
+  draw(s,R){ if(!R.ok){ ground(V(0,0)); ground(V(s.d*1000,0)); noPos(); return; }
+    const S1=x=>mul(x,1000), Rm={...R,pts:Object.fromEntries(Object.entries(R.pts).map(([k,v])=>[k,S1(v)]))};
+    drawMechCommon(s,Rm,{links:[{id:2,pins:['O2','A'],G:'G2'},{id:3,pins:['A','B'],G:'G3'},{id:4,pins:['O4','B'],G:'G4'}],
+      pins:[['O2',true],['O4',true],['A',false],['B',false]],names:[['O2','O₂',-16,16],['O4','O₄',16,16],['A','A',-12,-12],['B','B',12,-12]],
+      forceMags:()=>[...Object.values(R.F).map(hyp),s.FP],
+      mecForces:()=>[[Rm.pts.O2,R.F.F12,C.ink,'F₁₂'],[Rm.pts.O4,R.F.F14,C.ink,'F₁₄'],[Rm.pts.P,R.FP,C.b1,'F_P',{tip:true,w:2.6}]],
+      dclForces:()=>[],
+      extra:(offs,kF,dcl)=>{ if(s.dP>1e-4){ dotp(add(Rm.pts.P,offs[3]),3.5,C.b1); label('P',add(Rm.pts.P,offs[3]),C.b1,'left',false,7,10); }
+        if(Math.abs(R.T4)>1e-6) curl(add(Rm.pts.O4,offs[4]),34,Math.PI*.15,Math.sign(R.T4)*1.2,C.b1,'T₄');
+        if(!dcl) return;
+        drawForces([[Rm.pts.O2,R.F.F12,C.ink,'F₁₂'],[Rm.pts.A,R.F.F32,C.ink,'F₃₂']],kF,offs[2]);
+        drawForces([[Rm.pts.A,mul(R.F.F32,-1),C.ink,'−F₃₂'],[Rm.pts.B,R.F.F43,C.ink,'F₄₃'],[Rm.pts.P,R.FP,C.b1,'F_P',{tip:true,w:2.6}]],kF,offs[3]);
+        drawForces([[Rm.pts.B,mul(R.F.F43,-1),C.ink,'−F₄₃'],[Rm.pts.O4,R.F.F14,C.ink,'F₁₄']],kF,offs[4]); }}); },
+  handles(s){ if(s.vista==='dcl') return []; return [{p:mul(ue(s.th*DEG),s.a*1000),set:w=>{ s.th=Math.round(ang360(Math.atan2(w.y,w.x)/DEG)); }},
+    {p:V(s.d*1000,0),set:w=>{ s.d=clamp(Math.round(w.x)/1000,.05,.6); }}]; },
+  readout(s,R){ if(!R.ok) return [['Posición','imposible',1]];
+    return [['θ₃ / θ₄',fmt(ang360(R.ang.t3/DEG),1)+'° / '+fmt(ang360(R.ang.t4/DEG),1)+'°'],['α₃ / α₄',fmt(R.alpha[3],0)+' / '+fmt(R.alpha[4],0)+' rad/s²'],['Ángulo de transmisión',fmt(R.trans,1)+'°'],
+      ['|F₁₂|',fq(hyp(R.F.F12),'F'),1],['|F₃₂|',fq(hyp(R.F.F32),'F')],['|F₄₃|',fq(hyp(R.F.F43),'F')],['|F₁₄|',fq(hyp(R.F.F14),'F')],['T₁₂',fq(R.T12,'T'),1],['Potencia T₁₂·ω₂',fmt(R.T12*s.w,1)+' W']]; },
+  state(s,R){ if(!R.ok) return ['bad','En esta posición el acoplador y el balancín no cierran el lazo. '+grashof(s)];
+    return [R.trans<30?'warn':'ok',grashof(s)+(R.trans<30?` Ángulo de transmisión bajo (${fmt(R.trans,0)}°): las fuerzas en los pares crecen.`:'')]; },
+  calc(s,R){ if(!R.ok) return ['—']; const f=v=>fmt(v,isT()?2:3);
+    return [`<span class="c">Tres eslabones móviles × (ΣFx, ΣFy, ΣT) = 9 ecuaciones. Incógnitas: F₁₂, F₃₂, F₄₃, F₁₄ (dos componentes cada una) y T₁₂. En las juntas se usa F₂₃ = −F₃₂ y F₃₄ = −F₄₃.</span>`,
+      `Eslabón 2: F₁₂ + F₃₂ = m₂·a<sub>G2</sub>;  T₁₂ + R₁₂×F₁₂ + R₃₂×F₃₂ = I<sub>G2</sub>·α₂`,
+      `Eslabón 3: F₄₃ − F₃₂ + F<sub>P</sub> = m₃·a<sub>G3</sub>;  R₄₃×F₄₃ − R₂₃×F₃₂ + R<sub>P</sub>×F<sub>P</sub> = I<sub>G3</sub>·α₃`,
+      `Eslabón 4: F₁₄ − F₄₃ = m₄·a<sub>G4</sub>;  R₁₄×F₁₄ − R₃₄×F₄₃ + T₄ = I<sub>G4</sub>·α₄`,
+      `<span class="c">La matriz de 9×9 completa está en la vista Matrices.</span>`,
+      `F₁₂ = (<span class="v">${f(R.x[0])}; ${f(R.x[1])}</span>)  F₃₂ = (<span class="v">${f(R.x[2])}; ${f(R.x[3])}</span>) ${bu('F')}`,
+      `F₄₃ = (<span class="v">${f(R.x[4])}; ${f(R.x[5])}</span>)  F₁₄ = (<span class="v">${f(R.x[6])}; ${f(R.x[7])}</span>) ${bu('F')}`,
+      `T₁₂ = <span class="v">${fmt(R.x[8],2)} ${bu('T')}</span>`]; },
+  mtx(s,R){ if(!R.ok) return mtxPage(s,R,{}); const f=v=>fmt(v,isT()?2:3), FU=' '+bu('F');
+    return mtxPage(s,R,{
+      eqs:[eqBlock('Eslabón 2',[`F₁₂x + F₃₂x = m₂·a<sub>G2x</sub>`,`F₁₂y + F₃₂y = m₂·a<sub>G2y</sub>`,`T₁₂ + (R₁₂x·F₁₂y − R₁₂y·F₁₂x) + (R₃₂x·F₃₂y − R₃₂y·F₃₂x) = I<sub>G2</sub>·α₂`]),
+        eqBlock('Eslabón 3',[`F₄₃x − F₃₂x + F<sub>Px</sub> = m₃·a<sub>G3x</sub>`,`F₄₃y − F₃₂y + F<sub>Py</sub> = m₃·a<sub>G3y</sub>`,`(R₄₃x·F₄₃y − R₄₃y·F₄₃x) − (R₂₃x·F₃₂y − R₂₃y·F₃₂x) + (R<sub>Px</sub>·F<sub>Py</sub> − R<sub>Py</sub>·F<sub>Px</sub>) = I<sub>G3</sub>·α₃`]),
+        eqBlock('Eslabón 4',[`F₁₄x − F₄₃x = m₄·a<sub>G4x</sub>`,`F₁₄y − F₄₃y = m₄·a<sub>G4y</sub>`,`(R₁₄x·F₁₄y − R₁₄y·F₁₄x) − (R₃₄x·F₄₃y − R₃₄y·F₄₃x) + T₄ = I<sub>G4</sub>·α₄`])],
+      Asym:[['1','0','1','0','0','0','0','0','0'],['0','1','0','1','0','0','0','0','0'],['−'+Rs(12,'y'),Rs(12,'x'),'−'+Rs(32,'y'),Rs(32,'x'),'0','0','0','0','1'],
+        ['0','0','−1','0','1','0','0','0','0'],['0','0','0','−1','0','1','0','0','0'],['0','0',Rs(23,'y'),'−'+Rs(23,'x'),'−'+Rs(43,'y'),Rs(43,'x'),'0','0','0'],
+        ['0','0','0','0','−1','0','1','0','0'],['0','0','0','0','0','−1','0','1','0'],['0','0','0','0',Rs(34,'y'),'−'+Rs(34,'x'),'−'+Rs(14,'y'),Rs(14,'x'),'0']],
+      B:[Fs(12,'x'),Fs(12,'y'),Fs(32,'x'),Fs(32,'y'),Fs(43,'x'),Fs(43,'y'),Fs(14,'x'),Fs(14,'y'),'T<sub>12</sub>'],
+      Csym:['m₂·a<sub>G2x</sub>','m₂·a<sub>G2y</sub>','I<sub>G2</sub>·α₂','m₃·a<sub>G3x</sub> − F<sub>Px</sub>','m₃·a<sub>G3y</sub> − F<sub>Py</sub>','I<sub>G3</sub>·α₃ − R<sub>Px</sub>F<sub>Py</sub> + R<sub>Py</sub>F<sub>Px</sub>','m₄·a<sub>G4x</sub>','m₄·a<sub>G4y</sub>','I<sub>G4</sub>·α₄ − T₄'],
+      groups:[[0,3,'ESLABÓN 2',0],[3,3,'ESLABÓN 3',1],[6,3,'ESLABÓN 4',0]],
+      sol:[['F₁₂',f(R.x[0])+' ; '+f(R.x[1])+FU],['F₃₂',f(R.x[2])+' ; '+f(R.x[3])+FU],['F₄₃',f(R.x[4])+' ; '+f(R.x[5])+FU],['F₁₄',f(R.x[6])+' ; '+f(R.x[7])+FU],['T₁₂',fmt(R.x[8],2)+' '+bu('T')]],
+      note:'En el apunte, la ecuación ΣFy del eslabón 3 aparece como F₄₃y − F₃₂y − F<sub>Py</sub>: el signo de F<sub>Py</sub> es +, igual que en ΣFx; por eso en [C] queda m₃·a<sub>G3y</sub> − F<sub>Py</sub>.'}); },
+  charts(s,R){ cycleCharts(s,R,['F12','F32','F43','F14'],[C.l2,C.b1,C.l3,C.b2],'|F| en los pares'); },
+  steps:[
+    {t:'El mecanismo y sus cargas',p:'Manivela-balancín girando a 50 rad/s constantes, con una fuerza de 2,14 kgf en el CG del acoplador y un par de 4,46 kgf·cm en el balancín que siempre se opone a su giro, como el caso de volantes del apunte. Mirá F₁₂ y F₁₄: son las fuerzas que la bancada hace sobre el mecanismo.',set:{...{a:.10,b:.30,c:.25,d:.28,th:60,w:50,al:0,FP:2.14*G0,thF:270,dP:0,T4:4.46*.0980665},vista:'mec',sys:'tec'}},
+    {t:'Despiezar',p:'Vista "Cuerpos libres". Cada junta tiene una sola incógnita vectorial: F₃₂ en A (con −F₃₂ sobre el 3) y F₄₃ en B (con −F₄₃ sobre el 4). Con las de la bancada son 8 componentes, más T₁₂: 9 incógnitas.',set:{vista:'dcl'}},
+    {t:'La matriz de 9×9',p:'Vista Matrices. Fijate que [A] sólo tiene unos, ceros y componentes de los vectores R: es pura geometría. Las masas, aceleraciones y cargas quedan todas en [C].',set:{vista:'mtx'}},
+    {t:'Las cargas son chicas',p:'Anulá F_P y T₄. ¿Cuánto cambia el par máximo del gráfico? Casi todo el T₁₂ viene de acelerar los eslabones, no del trabajo exterior.',set:{vista:'mec',FP:0,T4:0},flash:'FP'},
+    {t:'Más rápido',p:'Volvé las cargas y subí ω₂ a 100 rad/s. Las fuerzas de inercia crecen con ω²: mirá cómo se multiplican los picos de T₁₂ y de las fuerzas en los pares.',set:{FP:2.14*G0,T4:4.46*.0980665,w:100},flash:'w'}]};
+
+/* =====================================================================
+   05 · MANIVELA-CORREDERA DE CUATRO BARRAS (pistón)
+   ===================================================================== */
+function posPist(s,t){ const Ax=s.a*Math.cos(t), Ay=s.a*Math.sin(t), dy=s.e-Ay, q=s.b*s.b-dy*dy; if(q<0) return null;
+  const Bx=Ax+Math.sqrt(q), t3=Math.atan2(dy,Bx-Ax);
+  return {t2:t,t3,Ax,Ay,Bx,By:s.e,G2x:s.r2*Math.cos(t+s.d2*DEG),G2y:s.r2*Math.sin(t+s.d2*DEG),G3x:Ax+s.r3*Math.cos(t3+s.d3*DEG),G3y:Ay+s.r3*Math.sin(t3+s.d3*DEG)}; }
+function solvePist(s){ const K=kinDeriv(posPist,s,s.th,s.w,s.al); if(!K) return {ok:false};
+  const p=K.p, a=K.a, O2=V(0,0), A=PV(p,'A'), B=PV(p,'B'), G2=PV(p,'G2'), G3=PV(p,'G3');
+  const aG2=PV(a,'G2'), aG3=PV(a,'G3'), aG4=V(a.Bx,0), al2=s.al, al3=a.t3;
+  const L=x=>mul(x,BB('L')), r12=L(sub(O2,G2)), r32=L(sub(A,G2)), r23=L(sub(A,G3)), r43=L(sub(B,G3));
+  const v4=K.v.Bx, sv=Math.abs(v4)<1e-7?0:Math.sign(v4);
+  const m2=s.m2*BB('m'), m3=s.m3*BB('m'), m4=s.m4*BB('m'), I2=s.I2*BB('I'), I3=s.I3*BB('I'), FP=V(s.fmode==='res'?-sv*Math.abs(s.FP):s.FP,0), fp=mul(FP,BB('F'));
+  const ag2=mul(aG2,BB('A')), ag3=mul(aG3,BB('A')), ag4=mul(aG4,BB('A'));
+  const build=k=>({A:[[1,0,1,0,0,0,0,0],[0,1,0,1,0,0,0,0],[-r12.y,r12.x,-r32.y,r32.x,0,0,0,1],[0,0,-1,0,1,0,0,0],[0,0,0,-1,0,1,0,0],
+    [0,0,r23.y,-r23.x,-r43.y,r43.x,0,0],[0,0,0,0,-1,0,k,0],[0,0,0,0,0,-1,1,0]],
+    C:[m2*ag2.x,m2*ag2.y,I2*al2,m3*ag3.x,m3*ag3.y,I3*al3,m4*ag4.x-fp.x,-fp.y]});
+  let k=-sv*s.mu, S=build(k), x=gsolve(S.A,S.C), amb=false;
+  if(x&&sv&&x[6]<0){ k=sv*s.mu; S=build(k); x=gsolve(S.A,S.C); if(x&&x[6]>0) amb=true; }
+  if(!x) return {ok:false}; const Fb=BB('F');
+  return {ok:true,K,x,k,sv,v4,amb,A:S.A,C:S.C,T12:x[7]/BB('T'),F:{F12:V(x[0]/Fb,x[1]/Fb),F32:V(x[2]/Fb,x[3]/Fb),F43:V(x[4]/Fb,x[5]/Fb),F14:V(k*x[6]/Fb,x[6]/Fb)},FP,
+    pts:{O2,A,B,G2,G3,G4:B},ang:{t2:p.t2,t3:p.t3},aG:{2:aG2,3:aG3,4:aG4},alpha:{2:al2,3:al3,4:0},R:{r12,r32,r23,r43}}; }
+const PIST={
+  title:'Manivela-corredera de cuatro barras (pistón)',
+  hint:'Arrastrá A para girar la manivela',
+  def:{a:.05,b:.18,e:0,th:45,w:150,al:0,m2:.6,r2:.02,d2:0,I2:.0003,m3:.5,r3:.06,d3:0,I3:.0017,m4:.4,FP:1500,fmode:'res',mu:.05,vista:'mec',acc:false,dal:false},
+  ui:[viewSec(),
+    {h:'Geometría',items:[
+      {t:'range',k:'a',l:'Manivela O₂A (2)',q:'L',si:[10,200,.5],tec:[1,20,.05],d:{si:1,tec:2}},
+      {t:'range',k:'b',l:'Biela AB (3)',q:'L',si:[30,600,.5],tec:[3,60,.05],d:{si:1,tec:2}},
+      {t:'range',k:'e',l:'Excentricidad del cilindro',q:'L',si:[-80,80,.5],tec:[-8,8,.05],d:{si:1,tec:2}}]},
+    kinSec(),
+    {h:'Pistón',items:[
+      {t:'range',k:'m4',l:s=>isT()?'Peso del pistón W₄':'Masa del pistón m₄',q:'M',si:[.05,10,.01],tec:[.05,10,.01],d:2},
+      {t:'seg',k:'fmode',opts:[['res','Carga contra el movimiento'],['fija','Fuerza de sentido fijo']]},
+      {t:'range',k:'FP',l:s=>s.fmode==='res'?'Carga sobre el pistón |F_P|':'Fuerza sobre el pistón F_P (+ hacia la derecha)',q:'F',si:[s=>s.fmode==='res'?0:-8000,8000,10],tec:[s=>s.fmode==='res'?0:-800,800,1],d:{si:0,tec:0}},
+      {t:'range',k:'mu',l:'Fricción pistón–cilindro μ',min:0,max:.4,step:.01,d:2}]},
+    massSec(2,'manivela','a'),massSec(3,'biela','b'),
+    cycleSec('Fuerzas en los pares: F₁₂ (azul) · F₃₂ (naranja) · F₄₃ (verde) · F₁₄ (violeta)'),
+    {h:'Cálculo',items:[{t:'state'},{t:'calc'}]}],
+  fix(s){ s.r2=Math.min(s.r2,s.a*1.2); s.r3=Math.min(s.r3,s.b*1.2); },
+  compute(s){ const R=solvePist(s); R.cy=cycle(s,solvePist,['F12','F32','F43','F14']); return R; },
+  bbox(s){ const a=s.a*1000, b=s.b*1000; return mechBBox([V(-a,-a),V(a+b+.18*b,a),V(a+b,s.e*1000)],s.vista==='dcl'?.45:.12); },
+  draw(s,R){ if(!R.ok){ ground(V(0,0)); noPos(); return; }
+    const S1=x=>mul(x,1000), Rm={...R,pts:Object.fromEntries(Object.entries(R.pts).map(([k,v])=>[k,S1(v)]))};
+    const bw=Math.max(.22*s.b*1000,s.a*1000*.9), bh=Math.max(.13*s.b*1000,.5*s.a*1000), ey=s.e*1000, x0=(s.b-s.a)*1000-bw*.6, x1=(s.a+s.b)*1000+bw*.6;
+    drawMechCommon(s,Rm,{links:[{id:2,pins:['O2','A'],G:'G2'},{id:3,pins:['A','B'],G:'G3'},{id:4,pins:['B'],G:'G4',shape:off=>{ block(Rm.pts.B,bw,bh,C.l3,off); cgMark(add(Rm.pts.B,off),6,C.l3); }}],
+      pins:[['O2',true],['A',false],['B',false]],names:[['O2','O₂',-16,16],['A','A',-12,-12],['B','B',0,-bh*view.s/2-12]],
+      ground:()=>{ guideLine(V(x0,ey+bh/2+2),V(x1,ey+bh/2+2),1); guideLine(V(x1,ey-bh/2-2),V(x0,ey-bh/2-2),1); },
+      forceMags:()=>[...Object.values(R.F).map(hyp),Math.abs(R.FP.x)],
+      mecForces:()=>[[Rm.pts.O2,R.F.F12,C.ink,'F₁₂'],[add(Rm.pts.B,V(0,-bh/2)),R.F.F14,C.ink,'F₁₄'],[add(Rm.pts.B,V(Math.sign(-R.FP.x)*bw/2,0)),R.FP,C.b1,'F_P',{tip:true,w:2.6}]],
+      dclForces:()=>[],
+      extra:(offs,kF,dcl)=>{ if(!dcl) return;
+        drawForces([[Rm.pts.O2,R.F.F12,C.ink,'F₁₂'],[Rm.pts.A,R.F.F32,C.ink,'F₃₂']],kF,offs[2]);
+        drawForces([[Rm.pts.A,mul(R.F.F32,-1),C.ink,'−F₃₂'],[Rm.pts.B,R.F.F43,C.ink,'F₄₃']],kF,offs[3]);
+        drawForces([[Rm.pts.B,mul(R.F.F43,-1),C.ink,'−F₄₃'],[add(Rm.pts.B,V(0,-bh/2)),R.F.F14,C.ink,'F₁₄'],[add(Rm.pts.B,V(Math.sign(-R.FP.x)*bw/2,0)),R.FP,C.b1,'F_P',{tip:true,w:2.6}]],kF,offs[4]); }}); },
+  handles(s){ if(s.vista==='dcl') return []; return [{p:mul(ue(s.th*DEG),s.a*1000),set:w=>{ s.th=Math.round(ang360(Math.atan2(w.y,w.x)/DEG)); }}]; },
+  readout(s,R){ if(!R.ok) return [['Posición','imposible',1]];
+    return [['θ₃',fmt(ang360(R.ang.t3/DEG),2)+'°'],['v pistón',fmt(R.v4*uf('A'),UN[SYS].A[2])+' '+uu('A').replace('/s²','/s')],['a pistón',fq(R.aG[4].x,'A')],
+      ['|F₁₂|',fq(hyp(R.F.F12),'F'),1],['|F₃₂| = biela',fq(hyp(R.F.F32),'F')],['F₁₄ normal (pared)',fq(R.F.F14.y,'F')],['F₁₄ fricción',fq(R.F.F14.x,'F')],['T₁₂',fq(R.T12,'T'),1],['Potencia T₁₂·ω₂',fmt(R.T12*s.w,1)+' W']]; },
+  state(s,R){ if(!R.ok) return ['bad','La biela es más corta que la excentricidad: no se puede armar.'];
+    if(!R.sv) return ['warn','Punto muerto: el pistón está quieto, el sentido de la fricción queda indefinido y se toma f = 0.'];
+    return ['ok',`El pistón se mueve hacia la ${R.sv>0?'derecha':'izquierda'}: la fricción F₁₄x = ±μ·F₁₄y se opone. Como el pistón no gira, α₄ = 0, a_G4y = 0 y su ecuación de momentos desaparece: quedan 8 ecuaciones.`]; },
+  calc(s,R){ if(!R.ok) return ['—']; const f=v=>fmt(v,isT()?2:3);
+    return [`<span class="c">Eslabones 2 y 3 como en el cuadrilátero (sin F<sub>P</sub> en la biela). Pistón: ±μ·F₁₄y − F₄₃x + F<sub>Px</sub> = m₄·a<sub>G4x</sub>;  F₁₄y − F₄₃y + F<sub>Py</sub> = 0.</span>`,
+      `<span class="c">Incógnitas: F₁₂x, F₁₂y, F₃₂x, F₃₂y, F₄₃x, F₄₃y, F₁₄y, T₁₂ → matriz de 8×8 (vista Matrices).</span>`,
+      `F₁₂ = (<span class="v">${f(R.x[0])}; ${f(R.x[1])}</span>)  F₃₂ = (<span class="v">${f(R.x[2])}; ${f(R.x[3])}</span>) ${bu('F')}`,
+      `F₄₃ = (<span class="v">${f(R.x[4])}; ${f(R.x[5])}</span>)  F₁₄y = <span class="v">${f(R.x[6])}</span>  F₁₄x = ${fmt(R.k,2)}·F₁₄y = <span class="v">${f(R.k*R.x[6])}</span>`,
+      `T₁₂ = <span class="v">${fmt(R.x[7],2)} ${bu('T')}</span>`]; },
+  mtx(s,R){ if(!R.ok) return mtxPage(s,R,{}); const k=R.k, ks=(k>=0?'+':'−')+'μ', f=v=>fmt(v,isT()?2:3), FU=' '+bu('F');
+    return mtxPage(s,R,{
+      eqs:[eqBlock('Eslabón 2 (manivela)',[`F₁₂x + F₃₂x = m₂·a<sub>G2x</sub>`,`F₁₂y + F₃₂y = m₂·a<sub>G2y</sub>`,`T₁₂ + (R₁₂x·F₁₂y − R₁₂y·F₁₂x) + (R₃₂x·F₃₂y − R₃₂y·F₃₂x) = I<sub>G2</sub>·α₂`]),
+        eqBlock('Eslabón 3 (biela)',[`F₄₃x − F₃₂x = m₃·a<sub>G3x</sub>`,`F₄₃y − F₃₂y = m₃·a<sub>G3y</sub>`,`(R₄₃x·F₄₃y − R₄₃y·F₄₃x) − (R₂₃x·F₃₂y − R₂₃y·F₃₂x) = I<sub>G3</sub>·α₃`]),
+        eqBlock('Eslabón 4 (pistón)',[`${ks}·F₁₄y − F₄₃x + F<sub>Px</sub> = m₄·a<sub>G4x</sub>`,`F₁₄y − F₄₃y + F<sub>Py</sub> = 0   (a<sub>G4y</sub> = 0)`,`ΣT: todo actúa en el CG y α₄ = 0 → 0 = 0`])],
+      Asym:[['1','0','1','0','0','0','0','0'],['0','1','0','1','0','0','0','0'],['−'+Rs(12,'y'),Rs(12,'x'),'−'+Rs(32,'y'),Rs(32,'x'),'0','0','0','1'],
+        ['0','0','−1','0','1','0','0','0'],['0','0','0','−1','0','1','0','0'],['0','0',Rs(23,'y'),'−'+Rs(23,'x'),'−'+Rs(43,'y'),Rs(43,'x'),'0','0'],
+        ['0','0','0','0','−1','0',ks,'0'],['0','0','0','0','0','−1','1','0']],
+      B:[Fs(12,'x'),Fs(12,'y'),Fs(32,'x'),Fs(32,'y'),Fs(43,'x'),Fs(43,'y'),Fs(14,'y'),'T<sub>12</sub>'],
+      Csym:['m₂·a<sub>G2x</sub>','m₂·a<sub>G2y</sub>','I<sub>G2</sub>·α₂','m₃·a<sub>G3x</sub>','m₃·a<sub>G3y</sub>','I<sub>G3</sub>·α₃','m₄·a<sub>G4x</sub> − F<sub>Px</sub>','−F<sub>Py</sub>'],
+      groups:[[0,3,'ESLABÓN 2',0],[3,3,'ESLABÓN 3',1],[6,2,'ESLABÓN 4',0]],
+      sol:[['F₁₂',f(R.x[0])+' ; '+f(R.x[1])+FU],['F₃₂',f(R.x[2])+' ; '+f(R.x[3])+FU],['F₄₃',f(R.x[4])+' ; '+f(R.x[5])+FU],['F₁₄y (normal)',f(R.x[6])+FU],['F₁₄x = '+fmt(k,2)+'·F₁₄y',f(k*R.x[6])+FU],['T₁₂',fmt(R.x[7],2)+' '+bu('T')]]}); },
+  charts(s,R){ cycleCharts(s,R,['F12','F32','F43','F14'],[C.l2,C.b1,C.l3,C.b2],'|F| en los pares'); },
+  steps:[
+    {t:'Una bomba de pistón',p:'Manivela de 5 cm, biela de 18 cm, 150 rad/s (≈ 1430 rpm) y una carga de 1500 N que siempre se opone al movimiento del pistón, como en una bomba o un compresor. Mirá F₁₄: la pared del cilindro empuja al pistón de costado porque la biela está inclinada.',set:{a:.05,b:.18,e:0,th:45,w:150,al:0,FP:1500,fmode:'res',mu:.05,vista:'mec',sys:'si'}},
+    {t:'Cuerpos libres',p:'La biela (3) tiene sólo dos fuerzas, en A y en B, pero no es un elemento de dos fuerzas puro: su masa y su I_G hacen que F₃₂ y F₄₃ no queden alineadas con la biela.',set:{vista:'dcl'}},
+    {t:'Ocho incógnitas',p:'Vista Matrices. El pistón no gira: α₄ = 0, a_G4y = 0 y su ecuación de momentos es 0 = 0. Con F₁₄x = ±μ·F₁₄y quedan 8 ecuaciones y 8 incógnitas.',set:{vista:'mtx'}},
+    {t:'Sin gases',p:'Anulá F_P y recorré la vuelta. Lo que queda es sólo inercia: el par T₁₂ cambia de signo dos veces por vuelta. Una vez el motor entrega energía a las piezas y otra vez la recupera.',set:{vista:'mec',FP:0},flash:'FP'},
+    {t:'Biela corta',p:'Acortá la biela hasta unos 10 cm. La inclinación crece, la fuerza lateral sobre el cilindro aumenta y con ella la fricción.',set:{FP:1500,b:.10},flash:'b'}]};
+/* =====================================================================
+   06 · VOLANTES
+   ===================================================================== */
+const VMAT={acero:[7850,'Acero'],fund:[7200,'Fundición']};
+function omegaCurve(E,I,w){ const n=E.length, mE=E.reduce((a,b)=>a+b,0)/n; let W0=w*w+2*mE/I; const om=E.map(e=>W0-2*e/I);
+  const stall=om.some(v=>v<=0); const o=om.map(v=>v>0?Math.sqrt(v):NaN); const f=o.filter(Number.isFinite);
+  const mx=Math.max(...f), mn=Math.min(...f), av=f.reduce((a,b)=>a+b,0)/f.length; return {o,stall,mx,mn,cf:stall?Infinity:(mx-mn)/av}; }
+const VOL={
+  title:'Volante: suavizar el par motor',
+  hint:'Diagrama par–ángulo del mecanismo elegido, a ω₂ constante',
+  nogrid:true,
+  def:{src:'cuad',w:50,Cf:.05,mat:'acero',t:.03},
+  ui:[
+    {h:'Mecanismo que se alimenta',items:[{t:'seg',k:'src',opts:[['cuad','Cuatro barras (04)'],['pist','Pistón (05)']]},
+      {t:'note',x:'Se usan los datos que tengas cargados en esa pestaña, con α₂ = 0.'}]},
+    {h:'Funcionamiento',items:[
+      {t:'range',k:'w',l:'Velocidad media ω',min:5,max:300,step:1,u:'rad/s'},
+      {t:'range',k:'Cf',l:'Coeficiente de fluctuación Cf = (ωmáx − ωmín)/ω',min:.002,max:.2,step:.001,d:3}]},
+    {h:'Volante de disco macizo',items:[{t:'seg',k:'mat',opts:Object.entries(VMAT).map(([k,v])=>[k,v[1]])},
+      {t:'range',k:'t',l:'Espesor del disco',q:'L',si:[5,120,1],tec:[.5,12,.1],d:{si:0,tec:1}}]},
+    {h:'Velocidad del eje en una vuelta (ω/ω medio)',items:[{t:'chart',id:'ch-w'},{t:'note',x:'Con volante (naranja) y sólo con la inercia de la manivela (gris, punteada). Si la gris no aparece es porque, sin volante, el eje se frenaría antes de completar la vuelta.'}]},
+    {h:'Cálculo',items:[{t:'state'},{t:'calc'}]}],
+  compute(s){ const src={...STATE[s.src],w:s.w,al:0,ej:false}, fn=s.src==='cuad'?solveCuad:solvePist, n=360, T=[], th=[];
+    for(let i=0;i<=n;i++){ const R=fn({...src,th:i}); th.push(i); T.push(R.ok?R.T12:NaN); }
+    if(T.some(v=>!Number.isFinite(v))) return {ok:false,th,T};
+    const Tm=T.slice(0,n).reduce((a,b)=>a+b,0)/n, d=DEG, E=[0]; for(let i=1;i<=n;i++) E.push(E[i-1]+((T[i]+T[i-1])/2-Tm)*d);
+    let iMx=0,iMn=0; E.forEach((e,i)=>{ if(e>E[iMx]) iMx=i; if(e<E[iMn]) iMn=i; });
+    const dE=E[iMx]-E[iMn], Is=dE/(s.Cf*s.w*s.w), rho=VMAT[s.mat][0], r=Math.pow(2*Is/(rho*Math.PI*s.t),.25), mass=rho*Math.PI*r*r*s.t;
+    const I0=src.I2+src.m2*src.r2*src.r2, con=omegaCurve(E,Is+I0,s.w), sin=omegaCurve(E,I0,s.w);
+    return {ok:true,th,T,Tm,E,iMx,iMn,dE,Is,r,mass,I0,con,sin,Tmax:Math.max(...T),Tmin:Math.min(...T)}; },
+  bbox(){ return [-100,-100,100,100]; },
+  draw(s,R){ const wide=W>860, rw=wide?Math.min(270,W*.24):0, x0=64, x1=W-rw-34, yA0=118, yA1=yA0+(H-yA0-70)*.58, yB0=yA1+44, yB1=H-48;
+    if(!R.ok){ noPos('El mecanismo elegido no completa la vuelta con sus datos actuales: ajustalo en su pestaña.'); return; }
+    const fu=uf('T'), Tv=R.T.map(v=>v*fu), lo=Math.min(0,...Tv), hi=Math.max(0,...Tv), pad=(hi-lo)*.08||1, X=t=>x0+(x1-x0)*t/360, Y=v=>yA1-(v-(lo-pad))/((hi+pad)-(lo-pad))*(yA1-yA0);
+    const axes=(ya,yb,zeroY,yl)=>{ ctx.strokeStyle=C.line; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(x0,ya); ctx.lineTo(x0,yb); ctx.lineTo(x1,yb); ctx.stroke();
+      if(zeroY!=null){ ctx.beginPath(); ctx.moveTo(x0,zeroY); ctx.lineTo(x1,zeroY); ctx.stroke(); }
+      [0,90,180,270,360].forEach(t=>label(t+'°',V(X(t),yb+12),C.muted,'center',true,0,0,11)); label(yl,V(x0,ya-14),C.muted,'left',true,0,0,11.5); };
+    axes(yA0,yA1,Y(0),'Par demandado T₁₂ ['+uu('T')+']');
+    const Ym=Y(R.Tm*fu);
+    // áreas por encima / por debajo del par medio
+    for(let i=0;i<360;i++){ const a=Tv[i], b=Tv[i+1], up=(a+b)/2>R.Tm*fu; ctx.fillStyle=up?rgba(C.warn,.22):rgba(C.l2,.22);
+      ctx.beginPath(); ctx.moveTo(X(i),Ym); ctx.lineTo(X(i),Y(a)); ctx.lineTo(X(i+1),Y(b)); ctx.lineTo(X(i+1),Ym); ctx.closePath(); ctx.fill(); }
+    ctx.strokeStyle=C.warn; ctx.lineWidth=2.2; ctx.beginPath(); Tv.forEach((v,i)=>i?ctx.lineTo(X(i),Y(v)):ctx.moveTo(X(i),Y(v))); ctx.stroke();
+    ctx.save(); ctx.setLineDash([6,4]); ctx.strokeStyle=C.ink; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(x0,Ym); ctx.lineTo(x1,Ym); ctx.stroke(); ctx.restore();
+    label('T medio = '+fq(R.Tm,'T'),V(x1-4,Ym-11),C.ink,'right',true,0,0,12);
+    label('el eslabonamiento pide más que el motor: el eje se frena',V(x0+8,yA0+6),C.warn,'left',true,0,0,11.5);
+    label('el eslabonamiento devuelve energía: el eje se acelera',V(x0+8,yA0+22),C.l2,'left',true,0,0,11.5);
+    // energía acumulada
+    const fe=uf('E'), Ev=R.E.map(v=>v*fe), elo=Math.min(...Ev), ehi=Math.max(...Ev), ep=(ehi-elo)*.12||1, YE=v=>yB1-(v-(elo-ep))/((ehi+ep)-(elo-ep))*(yB1-yB0);
+    axes(yB0,yB1,null,'Energía ∫(T − T medio)dθ ['+uu('E')+']');
+    ctx.strokeStyle=C.b2; ctx.lineWidth=2.2; ctx.beginPath(); Ev.forEach((v,i)=>i?ctx.lineTo(X(i),YE(v)):ctx.moveTo(X(i),YE(v))); ctx.stroke();
+    [[R.iMn,'ω máx',C.l2],[R.iMx,'ω mín',C.warn]].forEach(([i,t,col])=>{ ctx.save(); ctx.setLineDash([3,4]); ctx.strokeStyle=col; ctx.lineWidth=1.2; ctx.beginPath(); ctx.moveTo(X(i),yA0); ctx.lineTo(X(i),yB1); ctx.stroke(); ctx.restore();
+      ctx.fillStyle=col; ctx.beginPath(); ctx.arc(X(i),YE(Ev[i]),4.5,0,7); ctx.fill(); label(t+' ('+i+'°)',V(X(i),YE(Ev[i])+(t==='ω mín'?-14:16)),col,'center',true,0,0,12); });
+    const xd=x1-16; ctx.strokeStyle=C.ink; ctx.lineWidth=1.2; ctx.beginPath(); ctx.moveTo(xd,YE(ehi)); ctx.lineTo(xd,YE(elo)); ctx.stroke();
+    [[YE(ehi),1],[YE(elo),-1]].forEach(([y,sg])=>{ ctx.fillStyle=C.ink; ctx.beginPath(); ctx.moveTo(xd,y); ctx.lineTo(xd-4,y+sg*8); ctx.lineTo(xd+4,y+sg*8); ctx.closePath(); ctx.fill(); });
+    label('ΔE = '+fq(R.dE,'E'),V(xd-8,(YE(ehi)+YE(elo))/2),C.ink,'right',true,0,0,12.5); },
+  handles(){ return []; },
+  readout(s,R){ if(!R.ok) return [['Mecanismo','no completa la vuelta',1]];
+    return [['T medio',fq(R.Tm,'T'),1],['T máx / mín',fmt(R.Tmax*uf('T'),1)+' / '+fmt(R.Tmin*uf('T'),1)+' '+uu('T')],['Potencia pico',fmt(Math.max(Math.abs(R.Tmax),Math.abs(R.Tmin))*s.w,0)+' W'],['Potencia media',fmt(R.Tm*s.w,0)+' W'],
+      ['ΔE',fq(R.dE,'E'),1],['I del volante',fq(R.Is,'I'),1],['Disco: diámetro',fq(2*R.r,'L')],['Disco: '+(isT()?'peso':'masa'),fq(R.mass,'M')],['Cf sin volante',R.sin.stall?'el eje se frena':fmt(R.sin.cf,3)]]; },
+  state(s,R){ if(!R.ok) return ['bad','El mecanismo de la pestaña elegida no da una vuelta completa: revisá sus longitudes.'];
+    const k=Math.max(Math.abs(R.Tmax),Math.abs(R.Tmin))/Math.max(1e-9,Math.abs(R.Tm));
+    return [R.sin.stall?'warn':'ok',`El par pico es ${fmt(k,1)} veces el medio. Con el volante el motor se dimensiona para ${fmt(R.Tm*s.w,0)} W en lugar de ${fmt(Math.max(Math.abs(R.Tmax),Math.abs(R.Tmin))*s.w,0)} W.`+(R.sin.stall?' Sin volante, la inercia de la manivela no alcanza: el eje se frenaría en la vuelta.':'')]; },
+  calc(s,R){ if(!R.ok) return ['—']; const Eu=bu('E');
+    return [`<span class="c">Con el motor entregando el par medio, Newton en el eje:</span>`,
+      `T<sub>E</sub> − T<sub>prom</sub> = I·α = I·ω·dω/dθ   →   ∫ (T<sub>E</sub> − T<sub>prom</sub>)·dθ = ½·I·(ω²<sub>máx</sub> − ω²<sub>mín</sub>)`,
+      `T<sub>prom</sub> = (1/2π)·∮T₁₂·dθ = <span class="v">${fbu(R.Tm,'T',2)}</span>`,
+      `ΔE = ∫ de θ(ω<sub>máx</sub>) = ${R.iMn}° a θ(ω<sub>mín</sub>) = ${R.iMx}° = <span class="v">${fmt(bv(R.dE,'E'),3)} ${Eu}</span>`,
+      `<span class="c">Con ω<sub>máx</sub> + ω<sub>mín</sub> ≈ 2ω y Cf = (ω<sub>máx</sub> − ω<sub>mín</sub>)/ω, queda ½·I·(ω²<sub>máx</sub> − ω²<sub>mín</sub>) = I·Cf·ω²:</span>`,
+      `I<sub>s</sub> = ΔE / (Cf·ω²) = ${fmt(bv(R.dE,'E'),3)} / (${fmt(s.Cf,3)}·${fmt(s.w,0)}²) = <span class="v">${fbu(R.Is,'I',isT()?3:4)}</span>`,
+      `Disco: I = ½·m·r² = ½·ρ·π·e·r⁴  →  r = <span class="v">${fbu(R.r,'L',isT()?2:4)}</span>`,
+      `<span class="c">El apunte llega hasta la igualdad de energías; el paso a Cf es la continuación habitual (Norton) para dimensionar el volante.</span>`]; },
+  charts(s,R){ if(!R.ok) return; const lo=1-3*s.Cf, hi=1+3*s.Cf, cl=v=>Number.isFinite(v)?clamp(v/s.w,lo,hi):NaN;
+    chart('ch-w',{xs:R.th,series:[{ys:R.th.map(()=>1),col:C.line,w:1},...(R.sin.stall?[]:[{ys:R.sin.o.map(cl),col:C.muted,w:1.5,dash:[5,4]}]),{ys:R.con.o.map(cl),col:C.accent}],xr:[0,360],yr:[lo,hi],yd:3,xt:[0,90,180,270,360],xl:'θ₂ [°]',yl:'ω / ω medio'}); },
+  steps:[
+    {t:'El par que pide el mecanismo',p:'El cuatro barras de la pestaña 04 a 50 rad/s. El par varía muchísimo en la vuelta y hasta cambia de signo, aunque las cargas exteriores son chicas: es energía que entra y sale de los eslabones.',set:{src:'cuad',w:50,Cf:.05}},
+    {t:'¿Dónde se frena el eje?',p:'Las zonas rojas son energía que el mecanismo pide por encima del par medio; las azules, la que devuelve. La curva de energía acumulada marca ω máx y ω mín, y su diferencia es ΔE.',set:{}},
+    {t:'Más uniformidad',p:'Bajá Cf a 0,01. Pedir una velocidad 5 veces más pareja exige un volante 5 veces más grande: I = ΔE/(Cf·ω²).',set:{Cf:.01},flash:'Cf'},
+    {t:'Girar más rápido',p:'Volvé a Cf = 0,05 y duplicá ω. Si casi todo el par es inercial, ΔE crece con ω² y el volante necesario casi no cambia. Con una carga que hace trabajo útil, en cambio, ΔE tiene otra parte que no depende de ω.',set:{Cf:.05,w:100},flash:'w'},
+    {t:'Una bomba de pistón',p:'Cambiá al mecanismo de la pestaña 05. La carga se opone al pistón en las dos carreras, así que el par medio es grande y la forma del diagrama cambia: dos pulsos por vuelta.',set:{src:'pist',w:150}}]};
+
+/* =====================================================================
+   MOTOR
+   ===================================================================== */
+const MODS={masa:MASA,pend:PEND,dal:DAL,rot:ROT,mc3:MC3,cuad:CUAD,pist:PIST,vol:VOL};
+const FUND=['masa','pend','dal'], MECH=['mc3','cuad','pist'];
+const STATE={}; Object.keys(MODS).forEach(k=>STATE[k]={...MODS[k].def});
+let mod='masa'; const M=()=>MODS[mod], st=()=>STATE[mod];
+let RES=null;
+
+/* ---------------- panel ---------------- */
+const txt=(x,s)=>typeof x==='function'?x(s):x; const OPEN={};
+function rng(it,s){ const a=it.q?it[SYS]:[it.min,it.max,it.step]; return a.map(v=>typeof v==='function'?v(s):v); }
+const fac=it=>it.q?uf(it.q):1;
+const dec=it=>{ const d=it.d; if(d==null) return it.q?UN[SYS][it.q][2]:0; return typeof d==='object'?d[SYS]:d; };
+const unit=it=>it.q?uu(it.q):(it.u||'');
+function buildPanel(){ const m=M(), s=st(), box=$('#ctrls'); box.innerHTML='';
+  m.ui.forEach(sec=>{ const items=sec.items.filter(it=>!it.when||it.when(s)); if(!items.length) return;
+    let el; if(sec.fold){ el=document.createElement('details'); el.className='sec fold'; const key=mod+'|'+sec.h; if(OPEN[key]) el.open=true;
+      el.innerHTML=`<summary><h3>${sec.h}</h3><small class="fsub"></small></summary>`; el.addEventListener('toggle',()=>{ OPEN[key]=el.open; }); el._sub=sec.sub; }
+    else { el=document.createElement('div'); el.className='sec'; el.innerHTML=`<h3>${sec.h}</h3>`; }
+    items.forEach(it=>{
+      if(it.t==='seg'){ const g=document.createElement('div'); g.className='seg'; g.setAttribute('role','group');
+        g.innerHTML=it.opts.map(([v,t])=>`<button type="button" data-k="${it.k}" data-v="${v}" aria-pressed="${s[it.k]===v}">${t}</button>`).join(''); el.appendChild(g); }
+      else if(it.t==='range'){ const f=document.createElement('div'); f.className='field'; f.dataset.k=it.k; const id='in-'+mod+'-'+it.k;
+        const [mn,mx,stp]=rng(it,s); f.innerHTML=`<label for="${id}">${txt(it.l,s)}</label><output id="o-${id}"></output><input type="range" id="${id}" min="${mn}" max="${mx}" step="${stp}" value="${s[it.k]*fac(it)}" data-k="${it.k}">`;
+        el.appendChild(f); }
+      else if(it.t==='chk'){ const l=document.createElement('label'); l.className='chk'; l.innerHTML=`<input type="checkbox" data-k="${it.k}" ${s[it.k]?'checked':''}>${txt(it.l,s)}`; el.appendChild(l); }
+      else if(it.t==='chart'){ const c=document.createElement('canvas'); c.className='pchart'; c.id=it.id; el.appendChild(c); }
+      else if(it.t==='note'){ const p=document.createElement('p'); p.className='cap'; p.textContent=it.x; el.appendChild(p); }
+      else if(it.t==='state'){ const d=document.createElement('div'); d.className='state'; d.id='stateBox'; el.appendChild(d); }
+      else if(it.t==='calc'){ const d=document.createElement('div'); d.className='calc'; d.id='calcBox'; el.appendChild(d); } });
+    box.appendChild(el); });
+  syncInputs(); }
+function itemSpec(k){ for(const sec of M().ui) for(const it of sec.items) if(it.k===k) return it; }
+function syncInputs(){ const s=st(); if(M().fix) M().fix(s); document.querySelectorAll('#ctrls input[type=range]').forEach(inp=>{ const k=inp.dataset.k, it=itemSpec(k), [mn,mx,stp]=rng(it,s), v=s[k]*fac(it);
+    inp.min=mn; inp.max=mx; inp.step=stp; inp.value=v;
+    inp.style.setProperty('--fill',clamp((v-mn)/(mx-mn)*100,0,100)+'%');
+    const o=document.getElementById('o-'+inp.id); if(o) o.textContent=fmt(v,dec(it))+(unit(it)?' '+unit(it):''); });
+  document.querySelectorAll('#ctrls .seg button').forEach(b=>b.setAttribute('aria-pressed',st()[b.dataset.k]===b.dataset.v));
+  document.querySelectorAll('#ctrls input[type=checkbox]').forEach(c=>c.checked=!!st()[c.dataset.k]);
+  document.querySelectorAll('#ctrls details.fold').forEach(d=>{ const f=d.querySelector('.fsub'); if(f&&d._sub) f.textContent=d._sub(st()); }); }
+$('#ctrls').addEventListener('input',e=>{ const t=e.target; if(!t.dataset.k) return; const s=st();
+  if(t.type==='range'){ const it=itemSpec(t.dataset.k); s[t.dataset.k]=parseFloat(t.value)/fac(it);
+    if(mod==='rot'&&s.agm==='dato'&&['th','w','al','rg','L'].includes(t.dataset.k)){ s.agm='cin'; buildPanel(); }
+    if(mod==='mc3'&&['a','b','e','th','w','al','r2','d2','r3','d3'].includes(t.dataset.k)) s.ej=false; }
+  else if(t.type==='checkbox'){ s[t.dataset.k]=t.checked; }
+  syncInputs(); update(); });
+$('#ctrls').addEventListener('click',e=>{ const b=e.target.closest('.seg button'); if(!b) return; const s=st(), k=b.dataset.k, v=b.dataset.v; if(s[k]===v) return; s[k]=v;
+  if(['agm','fmode'].includes(k)) buildPanel();
+  syncInputs(); update(); });
+
+/* ---------------- unidades ---------------- */
+function setSys(v){ if(v!==SYS){ SYS=v; try{ localStorage.setItem('dinalab-u',v); }catch(e){} }
+  document.querySelectorAll('.useg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.u===SYS)); }
+document.querySelectorAll('.useg button').forEach(b=>b.onclick=()=>{ setSys(b.dataset.u); buildPanel(); update(); });
+
+/* ---------------- lectura, cálculo y estado ---------------- */
+function update(noCharts){ const m=M(), s=st(); if(m.fix) m.fix(s); RES=m.compute(s);
+  const mv=$('#mtxview'), showM=!!(m.mtx&&s.vista==='mtx'); mv.hidden=!showM; $('#readout').style.visibility=showM?'hidden':''; if(showM) mv.innerHTML=m.mtx(s,RES);
+  $('#readout').innerHTML=`<div class="rt">${m.title}</div><dl>${m.readout(s,RES).map(([k,v,key])=>`<dt>${k}</dt><dd${key?' class="key"':''}>${v}</dd>`).join('')}</dl>`;
+  const sb=$('#stateBox'); if(sb){ const [cls,t]=m.state(s,RES); sb.className='state '+cls; sb.textContent=t; }
+  const cb=$('#calcBox'); if(cb) cb.innerHTML=m.calc(s,RES).map(x=>`<div class="eq${x.startsWith('<span class="c">')?' c':''}">${x}</div>`).join('');
+  if(m.charts&&!noCharts) m.charts(s,RES);
+  draw(); }
+
+/* ---------------- dibujo ---------------- */
+let handlesNow=[], hoverH=-1;
+function draw(){ if(!W||!RES) return; const m=M(), s=st(); fit(m.bbox(s)); clear(); if(!m.nogrid) grid(); m.draw(s,RES);
+  handlesNow=m.handles(s,RES)||[]; handlesNow.forEach((h,i)=>{ const P=S(h.p); ctx.save(); ctx.strokeStyle=C.accent; ctx.lineWidth=2; ctx.setLineDash([3,3]); ctx.beginPath(); ctx.arc(P.x,P.y,i===hoverH?14:11,0,7); ctx.stroke(); ctx.restore(); }); }
+
+/* ---------------- interacción en el lienzo ---------------- */
+let drag=null;
+const pt=e=>{const r=cv.getBoundingClientRect(); return V(e.clientX-r.left,e.clientY-r.top);};
+const hitH=q=>handlesNow.findIndex(h=>hyp(sub(S(h.p),q))<16);
+cv.addEventListener('pointerdown',e=>{ const q=pt(e), h=hitH(q); cv.setPointerCapture(e.pointerId);
+  drag=h>=0?{h,b:base.s}:{pan:true,q,p0:{...cam().pan}}; cv.classList.add('drag'); });
+cv.addEventListener('pointermove',e=>{ const q=pt(e);
+  if(!drag){ const h=hitH(q); if(h!==hoverH){hoverH=h; cv.classList.toggle('over',h>=0); draw();} return; }
+  if(drag.h!==undefined){ const h=handlesNow[drag.h]; if(!h) return; const s=st(); h.set(toW(q)); if(mod==='rot'&&drag.h===0&&s.agm==='dato'){ s.agm='cin'; buildPanel(); } syncInputs(); update(); }
+  else { const k=cam(); k.pan=sub(drag.p0,V((q.x-drag.q.x)/view.s,-(q.y-drag.q.y)/view.s)); draw(); } });
+const endDrag=()=>{drag=null; cv.classList.remove('drag');};
+cv.addEventListener('pointerup',endDrag); cv.addEventListener('pointercancel',endDrag);
+cv.addEventListener('wheel',e=>{ e.preventDefault(); zoomAt(pt(e),e.deltaY<0?1.12:1/1.12); },{passive:false});
+$('#z-in').onclick=()=>zoomAt(V(W/2,H/2),1.25); $('#z-out').onclick=()=>zoomAt(V(W/2,H/2),.8);
+function resetCam(){ const k=cam(); k.z=1; k.pan=V(0,0); syncZoom(); draw(); }
+$('#z-fit').onclick=resetCam;
+
+/* ---------------- animación ---------------- */
+const PLAY={masa:false,pend:!reduced,dal:!reduced,rot:false,mc3:false,cuad:false,pist:false,vol:false};
+const RV=['Recorrer vuelta','Detener'], PLBL={pend:['Soltar','Pausar'],dal:['Girar','Pausar giro'],rot:RV,mc3:RV,cuad:RV,pist:RV};
+const pb=$('#z-play');
+function syncPlay(){ const L=PLBL[mod]; pb.style.display=L?'':'none'; if(!L) return; pb.textContent=L[PLAY[mod]?1:0]; pb.setAttribute('aria-pressed',PLAY[mod]); }
+pb.onclick=()=>{ PLAY[mod]=!PLAY[mod]; if(mod==='pend'&&PLAY.pend&&SIM.t===0){} syncPlay(); };
+let last=0, chT=0;
+function tick(t){ const dt=last?Math.min(50,t-last):16; last=t;
+  if(RES&&PLAY[mod]){ const s=st();
+    if(mod==='pend'){ const h=.002; let n=Math.round(dt/1000/h); while(n-->0){ [SIM.th,SIM.om]=rk4(SIM.th,SIM.om,RES.w2,h); SIM.t+=h; }
+      draw(); if(t-chT>80){ chT=t; PEND.charts(s,RES); } }
+    else if(mod==='dal'){ phiD+=dt/1000*Math.min(Math.max(s.w,.3),12)*.35; draw(); }
+    else if(mod==='rot'){ s.th=(s.th+dt*.04)%360; if(s.agm==='dato'){ s.agm='cin'; buildPanel(); } s.th=Math.round(s.th*10)/10; syncInputs(); update(); }
+    else if(MECH.includes(mod)){ s.th=Math.round(((s.th+dt*.05)%360)*10)/10; s.ej=false; syncInputs(); const ch=t-chT>120; if(ch) chT=t; update(!ch); } }
+  requestAnimationFrame(tick); }
+requestAnimationFrame(tick);
+
+/* ---------------- ocultar resultados ---------------- */
+$('#hidebtn').onclick=()=>{ const on=$('#app').classList.toggle('hidevals'); $('#hidebtn').setAttribute('aria-pressed',on); $('#hidebtn').textContent=on?'Mostrar resultados':'Ocultar resultados'; };
+
+/* ---------------- guía de pasos ---------------- */
+const STEP={}; Object.keys(MODS).forEach(k=>STEP[k]=0);
+function renderSteps(){ const L=M().steps||[]; const i=STEP[mod];
+  $('#steps').innerHTML=L.map((s,j)=>`<button type="button" aria-current="${j===i}" aria-label="Paso ${j+1}: ${s.t}" data-step="${j}">${j+1}</button>`).join('');
+  $('#g-title').textContent=L[i]?L[i].t:''; $('#g-text').textContent=L[i]?L[i].p:''; }
+$('#steps').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; const j=+b.dataset.step, L=M().steps; STEP[mod]=j; const sp=L[j];
+  const {sys,...set}=sp.set||{}; if(sys) setSys(sys); Object.assign(st(),set); if(mod==='pend') SIM.key='';
+  if(mod==='rot'||MECH.includes(mod)) PLAY[mod]=false; syncPlay(); buildPanel(); renderSteps(); update();
+  if(sp.flash){ const f=document.querySelector(`#ctrls .field[data-k="${sp.flash}"]`); if(f){ f.classList.remove('flash'); void f.offsetWidth; f.classList.add('flash'); } } });
+
+/* ---------------- módulos ---------------- */
+const SUBN={masa:'Propiedades de masa',pend:'Método del péndulo',dal:"d'Alembert"};
+function go(k){ mod=k; closeMenus(); document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.go===k||(t.dataset.menu==='fund'&&FUND.includes(k))));
+  $('#sub-fund').textContent=FUND.includes(k)?SUBN[k]:''; document.querySelectorAll('#menu-fund [data-go]').forEach(b=>b.setAttribute('aria-current',b.dataset.go===k));
+  $('.cvwrap').classList.toggle('nozoom',mod==='vol');
+  $('#hint').textContent=M().hint||''; buildPanel(); renderSteps(); syncZoom(); syncPlay(); update();
+  try{ localStorage.setItem('dinalab-mod',k); }catch(e){} }
+document.querySelectorAll('.tab[data-go]').forEach(t=>t.onclick=()=>go(t.dataset.go));
+function closeMenus(){ document.querySelectorAll('.ddmenu').forEach(d=>d.hidden=true); document.querySelectorAll('.tab.dd').forEach(t=>t.setAttribute('aria-expanded','false')); }
+function openMenu(t){ const d=$('#menu-'+t.dataset.menu), r=t.getBoundingClientRect(); closeMenus(); d.hidden=false; t.setAttribute('aria-expanded','true');
+  const w=d.offsetWidth; d.style.left=Math.max(8,Math.min(r.left,innerWidth-w-8))+'px'; d.style.top=(r.bottom+4)+'px'; (d.querySelector('[aria-current="true"]')||d.querySelector('button')).focus(); }
+document.querySelectorAll('.tab.dd').forEach(t=>t.addEventListener('click',e=>{ e.stopPropagation(); t.getAttribute('aria-expanded')==='true'?closeMenus():openMenu(t); }));
+document.querySelectorAll('.ddmenu [data-go]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.go)));
+document.addEventListener('click',e=>{ if(!e.target.closest('.ddmenu')) closeMenus(); });
+document.addEventListener('keydown',e=>{ const d=document.querySelector('.ddmenu:not([hidden])'); if(!d) return;
+  if(e.key==='Escape'){ closeMenus(); e.preventDefault(); }
+  else if(e.key==='ArrowDown'||e.key==='ArrowUp'){ const bs=[...d.querySelectorAll('button')], i=bs.indexOf(document.activeElement); bs[(i+(e.key==='ArrowDown'?1:-1)+bs.length)%bs.length].focus(); e.preventDefault(); } });
+let start='cuad'; try{ const v=localStorage.getItem('dinalab-mod'); if(v&&MODS[v]) start=v; const u=localStorage.getItem('dinalab-u'); if(u==='si'||u==='tec') SYS=u; }catch(e){}
+const hm=location.hash.slice(1); if(MODS[hm]) start=hm;
+setSys(SYS);
+window.addEventListener('resize',()=>{ if(M().charts&&RES) M().charts(st(),RES); });
+go(start);
+window.__DL={MODS,STATE,go,setSys,rotSolve,mazoCalc,solveMC3,solveCuad,solvePist,SIM,get RES(){return RES;}};
+})();
+</script>
+</body></html>

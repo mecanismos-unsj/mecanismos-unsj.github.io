@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!--
+  μLAB (mu-lab) — Frenos y embragues
+  Universidad Nacional de San Juan — Facultad de Ingeniería — Cátedra Mecanismos
+  Desarrollo: Ing. Manuel Galdeano Ruiz
+  Material didáctico de la Cátedra Mecanismos (FI-UNSJ).
+-->
+<meta name="author" content="Ing. Manuel Galdeano Ruiz — Cátedra Mecanismos, Facultad de Ingeniería, Universidad Nacional de San Juan">
+<title>μLAB</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: banco de trabajo — barra de módulos arriba, panel de control a la izquierda, lámina milimetrada a la derecha.
+   Misma familia visual que MECALAB y CONTACTLAB. */
+:root{
+  --bg:#eef1ef; --panel:#fbfcfb; --canvas:#f7f9f8; --ink:#1b2320; --muted:#5d6a64; --line:#d3dbd7;
+  --grid:#e4eae7; --grid2:#d2dbd6;
+  --b1:#c9500a; --b1f:#fbeee6; --b2:#8a3fa8; --b2f:#f3eaf7; --geo:#1d7f47; --hot:#d97706; --warn:#c0392b;
+  --accent:#c9500a; --accent-ink:#ffffff;
+  --l1:#6b7570; --l2:#1f6fb2; --l3:#1d7f47; --l4:#c9500a; --l5:#8a3fa8; --l6:#0f8b8d;
+  --steel:#c9d2ce; --lining:#5b4a3a;
+  --f-ui:"Barlow Semi Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0f1412; --panel:#151b19; --canvas:#111715; --ink:#e4eae7; --muted:#8f9d97; --line:#2a3430;
+  --grid:#18201d; --grid2:#222c28;
+  --b1:#ff8a3d; --b1f:rgba(255,138,61,.13); --b2:#c693e6; --b2f:rgba(198,147,230,.13); --geo:#4fcf89; --hot:#ffc24a; --warn:#ff6b5b;
+  --accent:#ff8a3d; --accent-ink:#1b1208; --l1:#a3ada8; --l2:#6aaef0; --l3:#4fcf89; --l4:#ff8a3d; --l5:#c693e6; --l6:#4fd1d3;
+  --steel:#2c3633; --lining:#a08a72; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0f1412; --panel:#151b19; --canvas:#111715; --ink:#e4eae7; --muted:#8f9d97; --line:#2a3430;
+  --grid:#18201d; --grid2:#222c28;
+  --b1:#ff8a3d; --b1f:rgba(255,138,61,.13); --b2:#c693e6; --b2f:rgba(198,147,230,.13); --geo:#4fcf89; --hot:#ffc24a; --warn:#ff6b5b;
+  --accent:#ff8a3d; --accent-ink:#1b1208; --l1:#a3ada8; --l2:#6aaef0; --l3:#4fcf89; --l4:#ff8a3d; --l5:#c693e6; --l6:#4fd1d3;
+  --steel:#2c3633; --lining:#a08a72; color-scheme:dark }
+
+html,body{height:100%;margin:0}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:15px;line-height:1.4}
+.app{display:grid;grid-template-rows:auto 1fr;height:100%}
+
+.top{display:flex;align-items:stretch;gap:20px;padding-inline:16px;background:var(--panel);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.brand{display:flex;flex-direction:column;justify-content:center;padding-block:8px}
+.brand b{font-weight:700;font-size:20px;letter-spacing:.14em}
+.brand b span{color:var(--accent)}
+.brand small{font-size:12px;color:var(--muted);letter-spacing:.02em}
+.tabs{display:flex;gap:2px;overflow-x:auto;min-width:0;flex:1}
+.tab{all:unset;cursor:pointer;display:flex;align-items:center;gap:8px;padding:0 12px;font-size:14px;font-weight:600;color:var(--muted);border-bottom:3px solid transparent;white-space:nowrap;min-height:52px}
+.tab .n{font-family:var(--f-mono);font-size:11px;font-weight:400}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tab:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.hidebtn{all:unset;cursor:pointer;align-self:center;padding:7px 12px;border:1px solid var(--line);border-radius:5px;font-size:13.5px;font-weight:600;white-space:nowrap}
+.hidebtn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.hidebtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.work{display:grid;grid-template-columns:340px minmax(0,1fr);min-height:0}
+.panel{overflow-y:auto;background:var(--panel);border-right:1px solid var(--line);padding:14px 16px 20px;display:flex;flex-direction:column;gap:18px;min-height:0}
+.sec{display:flex;flex-direction:column;gap:10px}
+.sec h3{margin:0;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.lead{margin:0;font-size:14px;color:var(--muted)}
+.lead strong{color:var(--ink);font-weight:600}
+
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{all:unset;cursor:pointer;text-align:center;padding:7px 6px;font-size:13px;font-weight:600;color:var(--muted)}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+.seg button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+
+.field{display:grid;grid-template-columns:1fr auto;gap:2px 8px;align-items:baseline}
+.field label{font-size:14px;font-weight:500}
+.field output{font-family:var(--f-mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.field input[type=range]{grid-column:1/-1;width:100%}
+.field.flash{animation:flash 1.6s ease 2}
+@keyframes flash{50%{background:color-mix(in srgb,var(--accent) 18%,transparent)}}
+
+.toggles{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.chk{display:flex;align-items:center;gap:7px;font-size:13.5px;cursor:pointer;padding:5px 7px;border:1px solid var(--line);border-radius:5px}
+.chk input{accent-color:var(--accent);margin:0}
+.chk i{width:10px;height:10px;border-radius:2px;flex:none}
+
+.calc{border:1px solid var(--line);border-radius:6px;background:var(--canvas);padding:8px 10px;display:flex;flex-direction:column;gap:6px}
+.calc .eq{font-family:var(--f-mono);font-size:12.5px;line-height:1.5;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.calc .eq .v{color:var(--accent)}
+.calc .eq.c{color:var(--muted);white-space:normal;font-family:var(--f-ui);font-size:13px}
+.state{font-size:13.5px;font-weight:700;padding:6px 10px;border-radius:5px;border:1px solid var(--line)}
+.state.ok{color:var(--geo);border-color:color-mix(in srgb,var(--geo) 50%,transparent)}
+.state.warn{color:var(--hot);border-color:color-mix(in srgb,var(--hot) 50%,transparent)}
+.state.bad{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 55%,transparent);background:color-mix(in srgb,var(--warn) 8%,transparent)}
+.pchart{width:100%;height:170px;display:block;border:1px solid var(--line);border-radius:6px;background:var(--canvas)}
+.cap{font-size:12.5px;color:var(--muted);margin:0}
+table.mat{border-collapse:collapse;width:100%;font-size:13px}
+table.mat td{border-bottom:1px solid var(--line);padding:5px 4px;vertical-align:top}
+table.mat td+td{font-family:var(--f-mono);font-size:12px;text-align:right;white-space:nowrap}
+
+.stage{position:relative;display:flex;flex-direction:column;min-width:0;min-height:0}
+.cvwrap{position:relative;flex:1;min-height:0;background:var(--canvas)}
+#cv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+#cv.drag{cursor:grabbing}
+#cv.over{cursor:pointer}
+.readout{position:absolute;top:12px;right:12px;background:color-mix(in srgb,var(--panel) 92%,transparent);border:1px solid var(--line);border-radius:6px;padding:8px 10px;min-width:230px;max-width:46%;pointer-events:none}
+.readout dl{margin:0;display:grid;grid-template-columns:auto auto;gap:3px 14px}
+.readout dt{font-size:13px;color:var(--muted)}
+.readout dd{margin:0;text-align:right;font-family:var(--f-mono);font-size:12.5px;font-variant-numeric:tabular-nums}
+.readout dd.key{color:var(--accent);font-weight:500}
+.readout .rt{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.hidevals .readout dd,.hidevals .calc .v,.hidevals .state{filter:blur(6px);user-select:none}
+.hint{position:absolute;left:12px;top:12px;font-size:12.5px;color:var(--muted);pointer-events:none;max-width:calc(54% - 24px)}
+.zoombar{position:absolute;right:12px;bottom:12px;display:flex;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.zoombar button{all:unset;cursor:pointer;min-width:32px;height:32px;display:grid;place-items:center;font-size:17px;font-weight:600;color:var(--ink)}
+.zoombar button.txt{font-size:13px;padding:0 10px;border-left:1px solid var(--line)}
+.zoombar button:hover{background:var(--bg)}
+.zoombar button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.zoombar output{font-family:var(--f-mono);font-size:12px;min-width:52px;text-align:center;font-variant-numeric:tabular-nums;color:var(--muted)}
+
+.guide{border-top:1px solid var(--line);background:var(--panel);padding:10px 16px 12px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 18px;align-items:start}
+.steps{display:flex;gap:4px;grid-row:span 2}
+.steps button{all:unset;cursor:pointer;width:30px;height:30px;display:grid;place-items:center;border:1px solid var(--line);border-radius:50%;font-family:var(--f-mono);font-size:12px}
+.steps button[aria-current="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.steps button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.guide h4{margin:0;font-size:16px;font-weight:700;text-wrap:balance}
+.guide p{margin:0;font-size:14.5px;max-width:80ch;color:var(--ink)}
+
+.credits{margin-top:auto;padding-top:12px;border-top:1px solid var(--line);font-size:11px;line-height:1.45;color:var(--muted)}
+.credits b{display:block;font-weight:600}
+.credits .d{margin-top:4px}
+
+@media (max-width:860px){
+  html,body{height:auto}
+  .app{height:auto;display:block}
+  .work{display:flex;flex-direction:column}
+  .stage{order:-1}
+  .cvwrap{height:62vh;flex:none}
+  .panel{border-right:0;border-top:1px solid var(--line);overflow:visible}
+  .readout{position:static;margin:10px 16px 0;min-width:0;max-width:none}
+  .hint{display:none}
+  .guide{grid-template-columns:1fr}
+  .steps{grid-row:auto}
+  .tabs{order:3;flex-basis:100%;margin-inline:-16px;padding-inline:8px}
+  .top{gap:8px 20px}
+  .hidebtn{margin-left:auto}
+}
+@media (prefers-reduced-motion:reduce){ .field.flash{animation:none} }
+
+/* sliders iguales en todos los navegadores y temas */
+input[type=range]{-webkit-appearance:none;appearance:none;background:transparent;height:20px;cursor:pointer;margin:0;padding:0}
+input[type=range]:focus{outline:none}
+input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:linear-gradient(to right,var(--accent) 0 var(--fill,0%),var(--line) var(--fill,0%) 100%);border:0}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;border-radius:50%;background:var(--accent);border:2px solid var(--panel);box-shadow:0 0 0 1px var(--accent);margin-top:-6px}
+input[type=range]::-moz-range-track{height:4px;border-radius:2px;background:var(--line);border:0}
+input[type=range]::-moz-range-progress{height:4px;border-radius:2px;background:var(--accent)}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--accent);border:2px solid var(--panel);box-shadow:0 0 0 1px var(--accent)}
+input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 35%,transparent)}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header class="top">
+    <div class="brand"><b><span>μ</span>LAB</b><small>Frenos y embragues</small></div>
+    <nav class="tabs" role="tablist" aria-label="Módulos">
+      <button class="tab" role="tab" data-go="zc"><span class="n">01</span>Zapata corta</button>
+      <button class="tab" role="tab" data-go="zl"><span class="n">02</span>Zapatas largas</button>
+      <button class="tab" role="tab" data-go="ci"><span class="n">03</span>Freno de cinta</button>
+      <button class="tab" role="tab" data-go="em"><span class="n">04</span>Embrague de disco</button>
+      <button class="tab" role="tab" data-go="fd"><span class="n">05</span>Freno de disco</button>
+      <button class="tab" role="tab" data-go="ca"><span class="n">06</span>Calor y materiales</button>
+    </nav>
+    <button class="hidebtn" id="hidebtn" aria-pressed="false" title="Oculta los resultados para que la clase los estime antes">Ocultar resultados</button>
+  </header>
+
+  <main class="work">
+    <aside class="panel" id="panel">
+      <div id="ctrls" class="sec" style="gap:18px"></div>
+      <div class="credits" aria-label="Créditos">
+        <b>Universidad Nacional de San Juan</b>
+        Facultad de Ingeniería<br>
+        Cátedra Mecanismos
+        <div class="d">Ing. Manuel Galdeano Ruiz</div>
+      </div>
+    </aside>
+
+    <section class="stage">
+      <div class="cvwrap">
+        <canvas id="cv" aria-label="Esquema del freno o embrague con sus fuerzas"></canvas>
+        <div class="hint" id="hint"></div>
+        <div class="zoombar" role="group" aria-label="Vista">
+          <button id="z-out" aria-label="Alejar">−</button>
+          <output id="z-val">100 %</output>
+          <button id="z-in" aria-label="Acercar">+</button>
+          <button id="z-fit" class="txt">Encuadrar</button>
+          <button id="z-play" class="txt" aria-pressed="true">Pausar giro</button>
+        </div>
+      </div>
+      <div class="readout" id="readout"></div>
+      <div class="guide" id="guide">
+        <div class="steps" id="steps"></div>
+        <h4 id="g-title"></h4>
+        <p id="g-text"></p>
+      </div>
+    </section>
+  </main>
+</div>
+<script>
+(()=>{
+"use strict";
+const $ = s => document.querySelector(s);
+const cv = $('#cv'), ctx = cv.getContext('2d');
+let W = 0, H = 0, DPR = 1;
+const DEG = Math.PI/180;
+
+/* ---------------- utilidades ---------------- */
+const V=(x,y)=>({x,y});
+const add=(a,b)=>V(a.x+b.x,a.y+b.y), sub=(a,b)=>V(a.x-b.x,a.y-b.y), mul=(a,k)=>V(a.x*k,a.y*k);
+const dot=(a,b)=>a.x*b.x+a.y*b.y, crs=(a,b)=>a.x*b.y-a.y*b.x, hyp=a=>Math.hypot(a.x,a.y);
+const nrm=a=>{const l=hyp(a)||1;return V(a.x/l,a.y/l);};
+const ue=a=>V(Math.cos(a),Math.sin(a)), up=a=>V(-Math.sin(a),Math.cos(a));
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const fmt=(x,d=2)=>Number.isFinite(x)?x.toLocaleString('es-AR',{minimumFractionDigits:d,maximumFractionDigits:d}):'—';
+const fN=x=>fmt(x,0)+' N', fNm=x=>fmt(x/1000,1)+' N·m', fMPa=x=>fmt(x,3)+' MPa', fkg=x=>fmt(x*10.197,2)+' kgf/cm²';
+const rgba=(hex,a)=>{ const h=hex.replace('#',''); const n=parseInt(h.length===3?h.split('').map(c=>c+c).join(''):h,16); return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`; };
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------------- colores (tokens) ---------------- */
+const C={};
+function readColors(){const cs=getComputedStyle(document.documentElement);
+  ['canvas','ink','muted','line','grid','grid2','b1','b1f','b2','b2f','geo','hot','warn','panel','accent','l2','l6','steel','lining'].forEach(k=>C[k]=cs.getPropertyValue('--'+k).trim());}
+readColors();
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{readColors();draw();});
+new MutationObserver(()=>{readColors();draw();}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+const FONT=()=>getComputedStyle(document.body).getPropertyValue('--f-mono');
+
+/* ---------------- vista: mundo en mm (y hacia arriba) -> pantalla ---------------- */
+const view={s:1,ox:0,oy:0}; const CAMS={};
+let base={s:1,c:V(0,0)};
+const cam=()=>CAMS[mod]||(CAMS[mod]={z:1,pan:V(0,0)});
+function fit(b){ const pad=34, k=cam();
+  const wide=W>860, top=wide?40:20, rw=wide?Math.min(270,W*.24):0; // lugar para la lectura (arriba a la derecha)
+  const aw=W-rw; base.s=Math.min((aw-2*pad)/(b[2]-b[0]),(H-pad-top)/(b[3]-b[1])); base.c=V((b[0]+b[2])/2,(b[1]+b[3])/2);
+  view.s=base.s*k.z; const c=add(base.c,k.pan);
+  view.ox=aw/2-view.s*c.x; view.oy=(H+top-pad)/2+view.s*c.y; }
+const S=p=>V(view.ox+view.s*p.x, view.oy-view.s*p.y);
+const toW=q=>V((q.x-view.ox)/view.s, (view.oy-q.y)/view.s);
+function zoomAt(q,f){ const k=cam(), z2=clamp(k.z*f,.4,20); if(z2===k.z) return;
+  const m=toW(q); k.z=z2; fit(M().bbox(st())); const m2=toW(q); k.pan=add(k.pan,sub(m,m2)); syncZoom(); draw(); }
+function syncZoom(){ $('#z-val').textContent=Math.round(cam().z*100)+' %'; }
+
+function resize(){ const r=cv.getBoundingClientRect(); DPR=window.devicePixelRatio||1; W=r.width; H=r.height;
+  cv.width=Math.max(1,Math.round(W*DPR)); cv.height=Math.max(1,Math.round(H*DPR)); draw(); }
+new ResizeObserver(resize).observe(cv.parentElement);
+
+/* ---------------- primitivas de dibujo ---------------- */
+function clear(){ ctx.setTransform(DPR,0,0,DPR,0,0); ctx.fillStyle=C.canvas; ctx.fillRect(0,0,W,H); }
+function grid(){ const a=toW(V(0,H)), b=toW(V(W,0));
+  for(const [step,col] of [[10,C.grid],[50,C.grid2]]){ if(step*view.s<6) continue;
+    ctx.strokeStyle=col; ctx.lineWidth=1; ctx.beginPath();
+    for(let x=Math.ceil(a.x/step)*step;x<=b.x;x+=step){const X=Math.round(S(V(x,0)).x)+.5;ctx.moveTo(X,0);ctx.lineTo(X,H);}
+    for(let y=Math.ceil(a.y/step)*step;y<=b.y;y+=step){const Y=Math.round(S(V(0,y)).y)+.5;ctx.moveTo(0,Y);ctx.lineTo(W,Y);}
+    ctx.stroke(); }
+  const mm=[5,10,20,50,100,200,500].find(v=>v*view.s>=60)||500, L=mm*view.s, x=16, y=H-18;
+  ctx.strokeStyle=C.muted; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+L,y); ctx.moveTo(x,y-4);ctx.lineTo(x,y+4);ctx.moveTo(x+L,y-4);ctx.lineTo(x+L,y+4); ctx.stroke();
+  label(mm+' mm',V(x+L+6,y),C.muted,'left',true); }
+function path(pts,{stroke=null,w=1,fill=null,dash=null,close=false}={}){ if(pts.length<2) return; ctx.save(); if(dash) ctx.setLineDash(dash);
+  ctx.beginPath(); pts.forEach((p,i)=>{const P=S(p); i?ctx.lineTo(P.x,P.y):ctx.moveTo(P.x,P.y);}); if(close) ctx.closePath();
+  if(fill){ctx.fillStyle=fill;ctx.fill();} if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=w;ctx.lineJoin='round';ctx.stroke();} ctx.restore(); }
+const line=(a,b,col,w=1,dash=null)=>path([a,b],{stroke:col,w,dash});
+function circle(c,r,stroke,w=1,fill=null,dash=null){ const P=S(c); ctx.save(); if(dash) ctx.setLineDash(dash); ctx.beginPath(); ctx.arc(P.x,P.y,Math.max(0,r*view.s),0,2*Math.PI);
+  if(fill){ctx.fillStyle=fill;ctx.fill();} if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=w;ctx.stroke();} ctx.restore(); }
+const arcPts=(c,r,a0,a1,n=64)=>{const p=[];for(let i=0;i<=n;i++){const a=a0+(a1-a0)*i/n;p.push(add(c,mul(ue(a),r)));}return p;};
+const rotAbout=(p,c,d)=>{ const q=sub(p,c), co=Math.cos(d), sn=Math.sin(d); return add(c,V(q.x*co-q.y*sn,q.x*sn+q.y*co)); };
+function bandT(c,r0,r1,a0,a1,fill,stroke,T){ const o=arcPts(c,r1,a0,a1), i=arcPts(c,r0,a1,a0); path(o.concat(i).map(T),{fill,stroke,w:1.2,close:true}); }
+function band(c,r0,r1,a0,a1,fill,stroke){ const o=arcPts(c,r1,a0,a1), i=arcPts(c,r0,a1,a0); path(o.concat(i),{fill,stroke,w:1.2,close:true}); }
+function label(t,p,col,align='left',screen=false,dx=0,dy=0,size=12){ const P=screen?p:S(p); ctx.save(); ctx.font=`500 ${size}px ${FONT()}`;
+  ctx.textAlign=align; ctx.textBaseline='middle'; ctx.lineJoin='round'; ctx.strokeStyle=C.canvas; ctx.lineWidth=4; ctx.strokeText(t,P.x+dx,P.y+dy); ctx.fillStyle=col; ctx.fillText(t,P.x+dx,P.y+dy); ctx.restore(); }
+/* flecha: punto en mundo, dirección en mundo, largo en px. tip=true -> la punta queda en el punto */
+function arrow(p,dir,len,col,txt,{tip=false,w=2.4}={}){ if(!(len>2)) return; const d0=nrm(dir), d=V(d0.x,-d0.y); let A=S(p), B=add(A,mul(d,len)); if(tip){B=A;A=sub(B,mul(d,len));}
+  const n=V(-d.y,d.x), h=Math.min(11,len*.45);
+  ctx.save(); ctx.strokeStyle=col; ctx.fillStyle=col; ctx.lineWidth=w; ctx.lineCap='round'; ctx.beginPath(); ctx.moveTo(A.x,A.y); ctx.lineTo(B.x-d.x*h*.7,B.y-d.y*h*.7); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(B.x,B.y); ctx.lineTo(B.x-d.x*h+n.x*h*.45,B.y-d.y*h+n.y*h*.45); ctx.lineTo(B.x-d.x*h-n.x*h*.45,B.y-d.y*h-n.y*h*.45); ctx.closePath(); ctx.fill(); ctx.restore();
+  if(txt){ const q=tip?A:B; label(txt,add(q,mul(d,tip?-13:13)),col,'center',true); } }
+/* flecha curva (giro o cupla): centro, radio en px, ángulo inicial y barrido (rad, + antihorario) */
+function curl(c,Rpx,a0,sw,col,txt){ const P=S(c); ctx.save(); ctx.strokeStyle=col; ctx.fillStyle=col; ctx.lineWidth=2.2; ctx.beginPath();
+  ctx.arc(P.x,P.y,Rpx,-a0,-(a0+sw),sw>0); ctx.stroke();
+  const ae=a0+sw, E=add(P,V(Math.cos(ae)*Rpx,-Math.sin(ae)*Rpx)), t=V(-Math.sin(ae)*Math.sign(sw),-Math.cos(ae)*Math.sign(sw)), n=V(-t.y,t.x);
+  ctx.beginPath(); ctx.moveTo(E.x+t.x*9,E.y+t.y*9); ctx.lineTo(E.x+n.x*4.5,E.y+n.y*4.5); ctx.lineTo(E.x-n.x*4.5,E.y-n.y*4.5); ctx.closePath(); ctx.fill(); ctx.restore();
+  if(txt){ const am=a0+sw/2; label(txt,add(P,V(Math.cos(am)*(Rpx+14),-Math.sin(am)*(Rpx+14))),col,'center',true); } }
+function dotp(c,rad,col){ const P=S(c); ctx.fillStyle=col; ctx.beginPath(); ctx.arc(P.x,P.y,rad,0,2*Math.PI); ctx.fill(); }
+function pin(p,col){ const P=S(p); ctx.save(); ctx.beginPath(); ctx.arc(P.x,P.y,6,0,7); ctx.fillStyle=C.panel; ctx.fill(); ctx.strokeStyle=col||C.ink; ctx.lineWidth=2; ctx.stroke(); ctx.restore(); }
+function ground(p,ang=-Math.PI/2){ // apoyo fijo: triángulo + rayado, ang = dirección hacia el suelo (mundo)
+  const d=ue(ang), n=V(-d.y,d.x), P=S(p), D=V(d.x,-d.y), N=V(n.x,-n.y);
+  ctx.save(); ctx.strokeStyle=C.ink; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(P.x,P.y); ctx.lineTo(P.x+D.x*18+N.x*12,P.y+D.y*18+N.y*12); ctx.lineTo(P.x+D.x*18-N.x*12,P.y+D.y*18-N.y*12); ctx.closePath(); ctx.stroke();
+  ctx.beginPath(); for(let i=-14;i<=12;i+=6){const Q=V(P.x+D.x*18+N.x*i,P.y+D.y*18+N.y*i); ctx.moveTo(Q.x,Q.y); ctx.lineTo(Q.x+D.x*7+N.x*5,Q.y+D.y*7+N.y*5);} ctx.stroke(); ctx.restore(); pin(p); }
+function head(P,d,col){ const n=V(-d.y,d.x); ctx.beginPath(); ctx.moveTo(P.x,P.y); ctx.lineTo(P.x-d.x*9+n.x*3.5,P.y-d.y*9+n.y*3.5); ctx.lineTo(P.x-d.x*9-n.x*3.5,P.y-d.y*9-n.y*3.5); ctx.closePath(); ctx.fill(); }
+/* cota entre a y b (mundo), corrida off px (+ a la izquierda de a→b). ea / eb: puntos desde donde salen las líneas de referencia */
+function dim(a,b,off,txt,col,ea,eb){ col=col||C.muted; const d=nrm(sub(b,a)), n=V(-d.y,d.x), o=mul(n,off/view.s), A=add(a,o), B=add(b,o);
+  const SA=S(A), SB=S(B), D=nrm(sub(SB,SA)), N=V(-D.y,D.x), L=hyp(sub(SB,SA));
+  ctx.save(); ctx.strokeStyle=col; ctx.fillStyle=col; ctx.lineWidth=.9;
+  for(const [from,to] of [[ea||a,A],[eb||b,B]]){ const F=S(from), T=S(to), u=nrm(sub(T,F)), l=hyp(sub(T,F)); if(l<3) continue;
+    ctx.setLineDash([3,3]); ctx.beginPath(); ctx.moveTo(F.x+u.x*3,F.y+u.y*3); ctx.lineTo(T.x+u.x*6,T.y+u.y*6); ctx.stroke(); }
+  ctx.setLineDash([]); ctx.lineWidth=1.1;
+  if(L>26){ ctx.beginPath(); ctx.moveTo(SA.x,SA.y); ctx.lineTo(SB.x,SB.y); ctx.stroke(); head(SB,D,col); head(SA,mul(D,-1),col); }
+  else { ctx.beginPath(); ctx.moveTo(SA.x-D.x*16,SA.y-D.y*16); ctx.lineTo(SB.x+D.x*16,SB.y+D.y*16); ctx.stroke(); head(SA,D,col); head(SB,mul(D,-1),col); }
+  ctx.restore();
+  if(txt){ const M=V((SA.x+SB.x)/2,(SA.y+SB.y)/2); const side=off>=0?-1:1; label(txt,V(M.x+N.x*11*(off>=0?1:-1)*-1,M.y+N.y*11*(off>=0?1:-1)*-1),col,'center',true); } }
+function drum(c,r,phi,{ring=0,fill=null,holes=6}={}){ // tambor/disco con marcas que giran
+  if(ring>0){ band(c,r,r+ring,0,2*Math.PI,C.steel,C.ink); circle(c,r*.32,C.ink,1.4,C.steel); }
+  else circle(c,r,C.ink,1.6,fill||C.steel);
+  for(let i=0;i<holes;i++){ const q=add(c,mul(ue(phi+i*2*Math.PI/holes),r*(ring>0?.2:.62))); circle(q,r*(ring>0?.035:.07),C.muted,1,C.canvas); }
+  circle(c,r*.12,C.ink,1.2,C.canvas); const P=S(c); ctx.strokeStyle=C.ink; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(P.x-7,P.y);ctx.lineTo(P.x+7,P.y);ctx.moveTo(P.x,P.y-7);ctx.lineTo(P.x,P.y+7);ctx.stroke(); }
+function spring(a,b,col){ const d=sub(b,a), L=hyp(d), u=mul(d,1/L), n=V(-u.y,u.x), pts=[a]; const k=10, amp=L*.06;
+  for(let i=1;i<k;i++) pts.push(add(add(a,mul(u,L*(.15+.7*i/k))),mul(n,(i%2?1:-1)*amp))); pts.push(b); path(pts,{stroke:col,w:1.3}); }
+
+/* ---------------- gráficos del panel ---------------- */
+function chart(id,{xs,series,xr,yr,xl,yl,shade,marks=[],xt=[]}){ const c=document.getElementById(id); if(!c) return; const r=c.getBoundingClientRect(); const d=window.devicePixelRatio||1;
+  c.width=Math.round(r.width*d); c.height=Math.round(r.height*d); const g=c.getContext('2d'); g.setTransform(d,0,0,d,0,0);
+  const w=r.width, h=r.height, L=38, R=10, T=12, B=28; const X=x=>L+(x-xr[0])/(xr[1]-xr[0])*(w-L-R), Y=y=>h-B-(y-yr[0])/(yr[1]-yr[0])*(h-T-B);
+  g.fillStyle=C.canvas; g.fillRect(0,0,w,h); g.font=`11px ${FONT()}`; g.fillStyle=C.muted; g.strokeStyle=C.line; g.lineWidth=1;
+  for(let i=0;i<=4;i++){ const y=yr[0]+(yr[1]-yr[0])*i/4, Yp=Math.round(Y(y))+.5; g.beginPath(); g.moveTo(L,Yp); g.lineTo(w-R,Yp); g.stroke(); g.textAlign='right'; g.textBaseline='middle'; g.fillText(fmt(y,yr[1]<3?1:0),L-5,Yp); }
+  g.textAlign='center'; g.textBaseline='top'; (xt.length?xt:[xr[0],(xr[0]+xr[1])/2,xr[1]]).forEach(x=>g.fillText(typeof x==='number'?fmt(x,0):x[1],X(typeof x==='number'?x:x[0]),h-B+5));
+  if(shade){ g.fillStyle=C.b1f; g.fillRect(X(shade[0]),T,X(shade[1])-X(shade[0]),h-T-B); }
+  series.forEach(s=>{ g.strokeStyle=s.col; g.lineWidth=s.w||2; g.setLineDash(s.dash||[]); g.beginPath(); xs.forEach((x,i)=>{const yy=s.ys[i]; if(!Number.isFinite(yy)) return; i?g.lineTo(X(x),Y(yy)):g.moveTo(X(x),Y(yy));}); g.stroke(); g.setLineDash([]); });
+  marks.forEach(m=>{ g.fillStyle=m.col; g.beginPath(); g.arc(X(m.x),Y(m.y),4,0,7); g.fill(); if(m.t){g.textAlign='left';g.textBaseline='bottom';g.fillText(m.t,X(m.x)+6,Y(m.y)-3);} });
+  g.fillStyle=C.muted; g.textAlign='left'; g.textBaseline='top'; g.fillText(yl,L+4,1); g.textAlign='right'; g.textBaseline='bottom'; g.fillText(xl,w-R,h-1); }
+
+/* =====================================================================
+   MÓDULOS
+   ===================================================================== */
+let phi=0; // ángulo de giro animado del tambor
+const rotSign=s=>s.rot==='cw'?-1:1; // +1 antihorario
+const KCOL=k=>k==='lock'?C.warn:(k==='ok'?C.geo:C.b1); // autoblocante / autoenergizante / no autoenergizante
+function legend(){ const items=[['ok','Autoenergizante'],['no','No autoenergizante'],['lock','Autoblocante']]; let x=16, y=H-44;
+  ctx.save(); ctx.font=`500 12px ${FONT()}`; ctx.textBaseline='middle';
+  items.forEach(([k,t])=>{ ctx.fillStyle=rgba(KCOL(k),.5); ctx.strokeStyle=KCOL(k); ctx.lineWidth=1.5; ctx.fillRect(x,y-6,14,12); ctx.strokeRect(x,y-6,14,12);
+    ctx.fillStyle=C.ink; ctx.fillText(t,x+20,y); x+=ctx.measureText(t).width+40; }); ctx.restore(); }
+const ROT=[['cw','Horario ↻'],['ccw','Antihorario ↺']];
+const forceScale=(arr,px=110)=>px/Math.max(1,...arr.filter(Number.isFinite).map(Math.abs));
+
+/* ---------- 01 · ZAPATA CORTA ---------- */
+const ZC={
+  title:'Zapata corta (elemental)',
+  hint:'Arrastrá el pivote O para cambiar los brazos a y b',
+  def:{rot:'cw',r:150,a:60,b:300,mu:.35,F:400,A:2500,dcl:true},
+  ui:[
+    {h:'Sentido de giro del tambor',items:[{t:'seg',k:'rot',opts:ROT}]},
+    {h:'Geometría',items:[
+      {t:'range',k:'r',l:'Radio del tambor r',min:60,max:300,step:5,u:'mm'},
+      {t:'range',k:'a',l:'Brazo de la fricción a',min:0,max:250,step:1,u:'mm'},
+      {t:'range',k:'b',l:'Brazo de F y N b',min:40,max:700,step:5,u:'mm'}]},
+    {h:'Material y carga',items:[
+      {t:'range',k:'mu',l:'Coeficiente de fricción μ',min:.1,max:.7,step:.01,d:2},
+      {t:'range',k:'F',l:'Fuerza exterior F',min:20,max:2000,step:10,u:'N'},
+      {t:'range',k:'A',l:'Área de la zapata A',min:500,max:8000,step:100,u:'mm²'},
+      {t:'chk',k:'dcl',l:'Diagrama de cuerpo libre'}]},
+    {h:'Cálculo',items:[{t:'state'},{t:'calc'}]}],
+  compute(s){ const sg=s.rot==='cw'?1:-1, den=s.b-sg*s.mu*s.a, lock=den<=0;
+    const N=lock?NaN:s.F*s.b/den, Ff=s.mu*N, T=Ff*s.r, Pa=N/s.A, Rx=-sg*Ff, Ry=s.F-N;
+    return {sg,den,lock,N,Ff,T,Pa,Rx,Ry,ener:sg>0,muLock:s.b/s.a}; },
+  bbox(s){ return [-1.3*s.r, -1.25*s.r, Math.max(s.b,.6*s.r)+.45*s.r, s.r+Math.max(s.a,.4*s.r)+.55*s.r]; },
+  draw(s,R){ const r=s.r, hl=.045*r, hs=.08*r, ws=.34*r, yT=r+hl+hs, P=V(s.b,r+s.a), Cp=V(0,r);
+    const kind=R.lock?'lock':(R.ener?'ok':'no'), col=KCOL(kind);
+    drum(V(0,0),r,phi);
+    curl(V(0,0),Math.min(80,r*view.s*.5),1.55*Math.PI,(s.rot==='cw'?-1:1)*.55*Math.PI,C.muted,R.lock?'ω → 0':'ω');
+    // despegue: si no es autoenergizante la fricción tiende a separar la zapata (giro leve alrededor de O, exagerado)
+    const gap=kind==='no'?(5+2.5*Math.sin(phi*6))/view.s:0, del=-gap/Math.max(s.b,1);
+    const T=p=>{ const q=sub(p,P), c=Math.cos(del), sn=Math.sin(del); return add(P,V(q.x*c-q.y*sn,q.x*sn+q.y*c)); };
+    path([V(-ws/2,r),V(ws/2,r),V(ws/2,r+hl),V(-ws/2,r+hl)].map(T),{fill:C.lining,close:true});
+    path([V(-ws/2,r+hl),V(ws/2,r+hl),V(ws/2,yT),V(-ws/2,yT)].map(T),{fill:rgba(col,.55),stroke:col,w:2,close:true});
+    path([T(V(0,yT)),P],{stroke:C.ink,w:5}); path([T(V(0,yT)),P],{stroke:C.steel,w:2.6});
+    ground(P,Math.PI/2.6);
+    label('O',P,C.ink,'left',false,10,-14);
+    const msg=kind==='lock'?'autoblocante: el tambor queda frenado':(kind==='ok'?'la fricción arrastra la zapata contra el tambor':'la fricción tiende a despegar la zapata');
+    label(msg,V(12,104),col,'left',true,0,0,12.5);
+    // cotas desde el pivote O hasta el punto de contacto zapata–tambor
+    const yb=Math.max(P.y,yT+.08*r);
+    dim(V(0,yb),V(s.b,yb),30,'b',null,Cp,P);
+    if(Math.abs(s.a)>.5) dim(V(s.b,r),V(s.b,r+s.a),-34,'a',null,Cp,P);
+    dotp(Cp,3.5,C.ink);
+    if(!s.dcl) return;
+    const k=forceScale([s.F,R.N||s.F,R.Ff||0,R.Rx||0,R.Ry||0]);
+    arrow(T(V(0,yT)),V(0,-1),s.F*k,C.b1,'F',{tip:true});
+    if(!R.lock){
+      arrow(Cp,V(0,1),R.N*k,C.l2,'N',{tip:true});
+      arrow(Cp,V(R.sg,0),R.Ff*k,C.b2,'μN');
+      if(Math.abs(R.Rx)*k>3) arrow(P,V(Math.sign(R.Rx),0),Math.abs(R.Rx)*k,C.geo,'Rx');
+      if(Math.abs(R.Ry)*k>3) arrow(P,V(0,Math.sign(R.Ry)),Math.abs(R.Ry)*k,C.geo,'Ry');
+      curl(V(0,0),Math.min(48,r*view.s*.3),.05*Math.PI,(s.rot==='cw'?1:-1)*.5*Math.PI,C.warn,'T');
+    }
+    legend(); },
+  stopped:(s,R)=>R.lock,
+  handles(s){ return [{p:V(s.b,s.r+s.a),set:w=>{s.b=clamp(Math.round(w.x/5)*5,40,700); s.a=clamp(Math.round(w.y-s.r),0,250);}}]; },
+  readout(s,R){ return R.lock?[['Condición','AUTOBLOCANTE',1],['μ·a',fmt(s.mu*s.a,1)+' mm'],['b',fmt(s.b,0)+' mm']]:
+    [['Normal N',fN(R.N),1],['Fricción μN',fN(R.Ff)],['Cupla de frenado T',fNm(R.T),1],['Presión Pa = N/A',fMPa(R.Pa)],['',fkg(R.Pa)],['Reacción Rx',fN(Math.abs(R.Rx))],['Reacción Ry',fN(Math.abs(R.Ry))],['N / F',fmt(R.N/s.F,2)]]; },
+  state(s,R){ if(R.lock) return ['bad','Autoblocante: b ≤ μ·a. El freno se aplica solo, sin fuerza exterior.'];
+    return R.ener?['ok',`Autoenergizante: la fricción ayuda a F (N = ${fmt(R.N/s.F,2)}·F). Se bloquearía con μ ≥ ${fmt(R.muLock,2)}.`]
+      :['warn','No autoenergizante: la fricción se opone a F. Hace falta más fuerza para la misma cupla.']; },
+  calc(s,R){ const sg=R.sg>0?'+':'−', sg2=R.sg>0?'−':'+';
+    return [`ΣM<sub>O</sub> = F·b − N·b ${sg} μ·N·a = 0`,
+      `N = F·b / (b ${sg2} μ·a) = <span class="v">${fmt(s.F,0)}·${fmt(s.b,0)} / (${fmt(s.b,0)} ${sg2} ${fmt(s.mu,2)}·${fmt(s.a,0)})</span>`,
+      `N = <span class="v">${R.lock?'— (autoblocante)':fN(R.N)}</span>`,
+      `T = μ·N·r = <span class="v">${R.lock?'—':fmt(s.mu,2)+'·'+fmt(R.N,0)+'·'+fmt(s.r,0)+' = '+fNm(R.T)}</span>`,
+      `Rx = μ·N = <span class="v">${R.lock?'—':fN(Math.abs(R.Rx))}</span>   Ry = N − F = <span class="v">${R.lock?'—':fmt(-R.Ry,0)+' N'}</span>`]; },
+  steps:[
+    {t:'¿Quién ayuda a quién?',p:'Con el tambor girando en sentido horario, compará N con F. ¿Por qué N resulta mayor que la fuerza que aplicamos? Mirá el momento de μN respecto de O.',set:{rot:'cw',a:60,b:300,mu:.35,F:400}},
+    {t:'Mismo freno, otro sentido',p:'Invertí el giro sin tocar nada más. ¿Cambia la fórmula de la cupla T = μ·N·r? ¿Qué pasa con la fuerza F necesaria para obtener la misma N?',set:{rot:'ccw'}},
+    {t:'Autoblocante',p:'Con giro horario, el pivote quedó cerca de la zapata (b chico) y lejos de la línea de fricción (a grande): b ≤ μ·a. La zapata se pone roja y el tambor se frena solo. ¿Qué significa que no haga falta fuerza exterior? Mové b para salir del autobloqueo.',set:{rot:'cw',a:220,b:70},flash:'b'},
+    {t:'Criterio de diseño',p:'Buscá una geometría que sea autoenergizante pero quede lejos del autobloqueo aunque μ aumente un 50 %. ¿Qué relación b/a elegirías?',set:{rot:'cw',a:60,b:180,mu:.35},flash:'mu'}]
+};
+
+/* ---------- 02 · ZAPATAS LARGAS (una, Simplex, Duplex) ---------- */
+function shoeCalc(g){ // g: {r,a,phiA,k,th1,th2,int,rot,mu,Pa,b}
+  const t1=g.th1*DEG, t2=g.th2*DEG, thA=(t1<=Math.PI/2&&t2>=Math.PI/2)?Math.PI/2:(Math.sin(t1)>Math.sin(t2)?t1:t2);
+  const Cc=g.Pa*g.b*g.r/Math.sin(thA), Ap=mul(ue(g.phiA*DEG),g.a);
+  let sN=V(0,0), sf=V(0,0), Mn=0, Mf=0, Ns=0; const n=240, dt=(t2-t1)/n;
+  for(let i=0;i<n;i++){ const th=t1+(i+.5)*dt, ph=g.phiA*DEG+g.k*th, M=mul(ue(ph),g.r), dN=Cc*Math.sin(th)*dt;
+    const nh=g.int?mul(ue(ph),-1):ue(ph), f=mul(up(ph),g.rot*g.mu*dN);
+    sN=add(sN,mul(nh,dN)); sf=add(sf,f); Mn+=crs(sub(M,Ap),nh)*dN; Mf+=crs(sub(M,Ap),f); Ns+=dN; }
+  const toe=mul(ue(g.phiA*DEG+g.k*t2),g.r), heel=mul(ue(g.phiA*DEG+g.k*t1),g.r), AP=sub(toe,Ap);
+  // F actúa en el extremo de la zapata, tangente al tambor (perpendicular al radio O–extremo): dirección fija respecto de la zapata
+  let dirF=up(g.phiA*DEG+g.k*t2); if(crs(AP,dirF)*Mn>0) dirF=mul(dirF,-1);
+  const d=Math.abs(crs(AP,dirF)), foot=add(toe,mul(dirF,-dot(AP,dirF)));
+  const F=(Mn+Mf)/(d*Math.sign(Mn)), ener=Mf*Mn<0, lock=F<=0;
+  const R=mul(add(add(sN,sf),mul(dirF,F)),-1), T=g.mu*g.r*Ns;
+  const As=.5*(t2-t1)-.25*(Math.sin(2*t2)-Math.sin(2*t1)), Bs=.5*(Math.sin(t2)**2-Math.sin(t1)**2), Ck=Math.cos(t1)-Math.cos(t2);
+  return {thA,C:Cc,A:Ap,toe,heel,d,foot,dirF,F,ener,lock,R,T,Mn:Math.abs(Mn),Mf:Math.abs(Mf),As,Bs,Ck,
+    MnA:Cc*g.a*As, MfA:Cc*g.mu*(g.r*Ck-g.a*Bs), TA:Cc*g.mu*g.r*Ck, muLock:g.mu*Math.abs(Mn)/Math.abs(Mf), g};
+}
+
+/* ---------- detalle ampliado de un punto M de la zapata (como un detalle de plano) ---------- */
+function zlDetail(s,R){ const z=R.sh[0], g=z.g, r=s.r, int=s.tipo==='int', th=clamp(s.thM,g.th1,g.th2)*DEG;
+  const M=mul(ue(th),r), A=z.A, AM=sub(M,A), e=hyp(AM), into=int?ue(th):mul(ue(th),-1), tan=V(-into.y,into.x);
+  let u=nrm(V(-AM.y,AM.x)); if(dot(u,into)<0) u=mul(u,-1);           // desplazamiento δ ⟂ AM, hacia el tambor
+  const sb=dot(u,into), ct=dot(u,tan), beta=Math.asin(clamp(sb,-1,1));    // δr/δ = sen β
+  let emax=0; for(let i=0;i<=40;i++){ const t=(g.th1+(g.th2-g.th1)*i/40)*DEG; emax=Math.max(emax,hyp(sub(mul(ue(t),r),A))); }
+  const pr=Math.sin(th)/Math.sin(z.thA);
+  // en el dibujo: recta A–M, punto M y círculo de detalle
+  line(A,M,C.ink,1,[5,4]); label('e',mul(add(A,M),.5),C.ink,'center',false,0,-10);
+  const SM=S(M); ctx.save(); ctx.strokeStyle=C.accent; ctx.lineWidth=1.6; ctx.setLineDash([4,3]); ctx.beginPath(); ctx.arc(SM.x,SM.y,20,0,7); ctx.stroke(); ctx.restore();
+  dotp(M,4.5,C.accent); label('M',M,C.accent,'left',false,24,-14);
+  // ubicación de la ventana: debajo de la lectura, o arriba a la izquierda en pantallas chicas
+  const ro=$('#readout'), iw=Math.min(270,W-24), ih=270; let ix=12, iy=36;
+  if(W>860&&ro){ const y0=ro.offsetTop+ro.offsetHeight+10; if(y0+ih<H-56){ ix=W-12-iw; iy=y0; } }
+  // línea de llamada del detalle
+  const cx=clamp(SM.x,ix,ix+iw), cy=clamp(SM.y,iy,iy+ih), dl=nrm(V(cx-SM.x,cy-SM.y));
+  ctx.save(); ctx.strokeStyle=C.accent; ctx.lineWidth=1; ctx.setLineDash([4,3]); ctx.beginPath(); ctx.moveTo(SM.x+dl.x*20,SM.y+dl.y*20); ctx.lineTo(cx,cy); ctx.stroke(); ctx.restore();
+  // ventana
+  ctx.save(); ctx.fillStyle=C.panel; ctx.strokeStyle=C.accent; ctx.lineWidth=1.5; ctx.beginPath(); ctx.rect(ix,iy,iw,ih); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.rect(ix,iy,iw,ih); ctx.clip();
+  ctx.font=`700 11px ${FONT()}`; ctx.fillStyle=C.muted; ctx.textBaseline='top'; ctx.fillText(`DETALLE M · θ = ${fmt(th/DEG,0)}°`,ix+10,iy+8);
+  const ox=ix+iw*.5, oy=iy+150, k=Math.min(105,oy-iy-48)/emax, P=w=>V(ox+dot(w,tan)*k, oy-dot(w,into)*k);
+  // tambor (arriba) y forro (abajo), superficie de contacto horizontal
+  ctx.fillStyle=C.steel; ctx.fillRect(ix,iy+28,iw,oy-(iy+28)); ctx.strokeStyle=C.ink; ctx.lineWidth=1.4; ctx.beginPath(); ctx.moveTo(ix,oy); ctx.lineTo(ix+iw,oy); ctx.stroke();
+  ctx.fillStyle=C.lining; ctx.fillRect(ix,oy,iw,14); ctx.fillStyle=rgba(KCOL((z.lock)?'lock':(z.ener?'ok':'no')),.45); ctx.fillRect(ix,oy+14,iw,22);
+  ctx.font=`500 11px ${FONT()}`; ctx.fillStyle=C.muted; ctx.textBaseline='middle'; ctx.fillText('tambor',ix+10,iy+40); ctx.textAlign='right'; ctx.fillText('forro / zapata',ix+iw-10,oy+26); ctx.textAlign='left';
+  // dirección hacia A (perpendicular a δ)
+  const dA=nrm(mul(AM,-1)), qd=V(dot(dA,tan),-dot(dA,into)), qA=V(ox+qd.x*34,oy+qd.y*34); ctx.strokeStyle=C.ink; ctx.lineWidth=1; ctx.setLineDash([4,3]); ctx.beginPath(); ctx.moveTo(ox,oy); ctx.lineTo(qA.x,qA.y); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle=C.ink; ctx.font=`600 11px ${FONT()}`; ctx.fillText('→A',qA.x+qd.x*4-8,qA.y+qd.y*8);
+  { const dd=V(ct,-sb), m=10; ctx.strokeStyle=C.ink; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(ox+dd.x*m,oy+dd.y*m); ctx.lineTo(ox+dd.x*m+qd.x*m,oy+dd.y*m+qd.y*m); ctx.lineTo(ox+qd.x*m,oy+qd.y*m); ctx.stroke(); }
+  // vectores: δ, δr (radial, presión) y δt (tangencial)
+  const Ld=e*k, D=V(ox+ct*Ld,oy-sb*Ld), Dr=V(ox,oy-sb*Ld), Dt=V(ox+ct*Ld,oy);
+  const arr=(x0,y0,x1,y1,col,w,t,dx,dy)=>{ const L=Math.hypot(x1-x0,y1-y0); if(L<3) return; const ux=(x1-x0)/L, uy=(y1-y0)/L;
+    ctx.strokeStyle=col; ctx.fillStyle=col; ctx.lineWidth=w; ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x1-ux*7,y1-uy*7); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x1-ux*10-uy*4,y1-uy*10+ux*4); ctx.lineTo(x1-ux*10+uy*4,y1-uy*10-ux*4); ctx.closePath(); ctx.fill();
+    if(t){ ctx.font=`600 12px ${FONT()}`; ctx.fillText(t,x1+dx,y1+dy); } };
+  ctx.setLineDash([3,3]); ctx.strokeStyle=C.muted; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(D.x,D.y); ctx.lineTo(Dr.x,Dr.y); ctx.moveTo(D.x,D.y); ctx.lineTo(Dt.x,Dt.y); ctx.stroke(); ctx.setLineDash([]);
+  arr(ox,oy-2,Dt.x,Dt.y-2,C.muted,2,'δt',ct>0?4:-22,-10);
+  arr(ox,oy,Dr.x,Dr.y,C.hot,3.2,'δr',8,0);
+  arr(ox,oy,D.x,D.y,C.ink,2.4,'δ',ct>0?6:-16,-6);
+  // ángulo β entre δ y la superficie
+  const a0=ct>=0?0:Math.PI, a1=Math.atan2(sb,ct); ctx.strokeStyle=C.ink; ctx.lineWidth=1; ctx.beginPath(); ctx.arc(ox,oy,22,-a0,-a1,a1>a0); ctx.stroke();
+  ctx.font=`500 11px ${FONT()}`; ctx.fillStyle=C.ink; ctx.fillText('β',ox+Math.cos((a0+a1)/2)*30-3,oy-Math.sin((a0+a1)/2)*30);
+  ctx.beginPath(); ctx.arc(ox,oy,4,0,7); ctx.fillStyle=C.accent; ctx.fill();
+  // valores y barra de presión
+  ctx.font=`500 11.5px ${FONT()}`; ctx.fillStyle=C.ink; ctx.textBaseline='top';
+  const ty=oy+42; ctx.fillText(`e = ${fmt(e,0)} mm   β = ${fmt(beta/DEG,0)}°`,ix+10,ty);
+  ctx.fillText(`δr = δ·sen β = K·a·sen θ`,ix+10,ty+16);
+  ctx.fillStyle=C.hot; ctx.fillText(`P / Pa = ${fmt(pr,2)}`,ix+10,ty+33);
+  const bx=ix+110, bw=iw-122; ctx.fillStyle=C.line; ctx.fillRect(bx,ty+35,bw,8); ctx.fillStyle=C.hot; ctx.fillRect(bx,ty+35,bw*clamp(pr,0,1),8);
+  ctx.restore();
+  return {M}; }
+const ZL={
+  title:'Zapatas largas',
+  hint:'Arrastrá los extremos de la zapata para cambiar θ₁ y θ₂',
+  def:{modo:'una',tipo:'int',rot:'cw',r:150,a:110,th1:10,th2:120,mu:.32,Pa:.7,b:40,Fc:2000,fric:true,det:false,thM:60,sweep:false},
+  ui:[
+    {h:'Configuración',items:[{t:'seg',k:'modo',opts:[['una','Una zapata'],['simplex','Simplex'],['duplex','Duplex']]},
+      {t:'seg',k:'tipo',opts:[['int','Interior'],['ext','Exterior']],when:s=>s.modo==='una'}]},
+    {h:'Sentido de giro del tambor',items:[{t:'seg',k:'rot',opts:ROT}]},
+    {h:'Geometría',items:[
+      {t:'range',k:'r',l:'Radio del tambor r',min:80,max:300,step:5,u:'mm'},
+      {t:'range',k:'a',l:'Distancia O–A (articulación) a',min:s=>ZL.aLim(s)[0],max:s=>ZL.aLim(s)[1],step:1,u:'mm'},
+      {t:'range',k:'th1',l:'Ángulo inicial θ₁',min:0,max:80,step:1,u:'°'},
+      {t:'range',k:'th2',l:'Ángulo final θ₂',min:40,max:175,step:1,u:'°'},
+      {t:'range',k:'b',l:'Ancho de la zapata b',min:15,max:120,step:1,u:'mm'}]},
+    {h:'Material y carga',items:[
+      {t:'range',k:'mu',l:'Coeficiente de fricción μ',min:.1,max:.6,step:.01,d:2},
+      {t:'range',k:'Pa',l:'Presión máxima Pa',min:.1,max:1.5,step:.01,u:'MPa',d:2,when:s=>s.modo==='una'},
+      {t:'range',k:'Fc',l:'Fuerza del cilindro F',min:200,max:6000,step:50,u:'N',when:s=>s.modo!=='una'},
+      {t:'chk',k:'fric',l:'Mostrar fuerzas de fricción'}]},
+    {h:'Detalle de un punto de la zapata',items:[{t:'chk',k:'det',l:'Mostrar detalle ampliado',when:s=>s.modo==='una'},{t:'range',k:'thM',l:'Posición del punto M, θ',min:s=>s.th1,max:s=>Math.max(s.th2,s.th1+5),step:1,u:'°',when:s=>s.modo==='una'&&s.det},{t:'chk',k:'sweep',l:'Recorrer la zapata',when:s=>s.modo==='una'&&s.det},{t:'note',x:'Cada punto se desplaza perpendicular a la recta que lo une con A (δ = K·e), pero solo la componente radial δr aprieta el forro contra el tambor. Por eso P ∝ sen θ.',when:s=>s.modo==='una'&&s.det}]},
+    {h:'Distribución de presión',items:[{t:'chart',id:'chZL'},{t:'note',x:'P = Pa·sen θ / sen θa. Cerca del talón (θ → 0) la presión tiende a cero: por eso el forro suele empezar en θ₁ = 15° a 30°.'}]},
+    {h:'Cálculo',items:[{t:'state'},{t:'calc'}]}],
+  shoes(s){ const base={r:s.r,a:s.a,th1:s.th1,th2:Math.max(s.th2,s.th1+5),rot:rotSign(s),mu:s.mu,b:s.b};
+    if(s.modo==='una') return [{...base,phiA:0,k:1,int:s.tipo==='int'}];
+    if(s.modo==='simplex') return [{...base,phiA:-90,k:1,int:true},{...base,phiA:-90,k:-1,int:true}];
+    return [{...base,phiA:-90,k:1,int:true},{...base,phiA:90,k:1,int:true}]; },
+  compute(s){ const L=this.shoes(s);
+    if(s.modo==='una'){ const z=shoeCalc({...L[0],Pa:s.Pa}); return {sh:[z],T:z.T,one:true}; }
+    const sh=L.map(g=>{ const u=shoeCalc({...g,Pa:1}); const Pa=u.F>0?s.Fc/u.F:NaN; return Number.isFinite(Pa)?shoeCalc({...g,Pa}):{...u,lockMulti:true,Pa:NaN}; });
+    return {sh,T:sh.reduce((t,z)=>t+(Number.isFinite(z.T)&&!z.lockMulti?z.T:0),0),one:false}; },
+  bbox(s){ const e=s.modo==='una'&&s.tipo==='ext'?Math.max(s.r*1.3,s.a+.3*s.r):s.r*1.3; return [-e,-e,e,e]; },
+  draw(s,R){ const r=s.r, int=s.modo!=='una'||s.tipo==='int', tl=.05*r, tw=.07*r;
+    if(int) drum(V(0,0),r+.0,phi,{ring:.1*r}); else drum(V(0,0),r,phi);
+    curl(V(0,0),Math.min(90,(int?r*.55:r*.45)*view.s), .62*Math.PI, rotSign(s)*.5*Math.PI, C.muted,'ω');
+    const allF=R.sh.flatMap(z=>[z.F,hyp(z.R)]).filter(Number.isFinite); const k=forceScale(allF,100);
+    if(!R.one){ // cilindro(s) y resorte
+      if(s.modo==='simplex'){ const t1=R.sh[0].toe, t2=R.sh[1].toe; path([t1,t2],{stroke:C.ink,w:9}); path([add(t1,V(-6,0)),add(t2,V(6,0))],{stroke:C.steel,w:5}); label('cilindro',mul(add(t1,t2),.5),C.muted,'center',false,0,-16,11);
+        spring(add(t1,V(0,-.18*r)),add(t2,V(0,-.18*r)),C.muted); }
+      else R.sh.forEach(z=>{ const c=add(z.toe,mul(z.dirF,-.07*r)); circle(c,.05*r,C.ink,1.4,C.steel); });
+    }
+    const PaMax=Math.max(...R.sh.map(z=>z.g.Pa).filter(Number.isFinite),1e-9);
+    R.sh.forEach((z,idx)=>{ const g=z.g, a0=g.phiA*DEG+g.k*g.th1*DEG, a1=g.phiA*DEG+g.k*g.th2*DEG, lo=Math.min(a0,a1), hi=Math.max(a0,a1);
+      const rl0=int?r-tl:r, rl1=int?r:r+tl, rw0=int?r-tl-tw:r+tl, rw1=int?r-tl:r+tl+tw;
+      const kind=(z.lock||z.lockMulti)?'lock':(z.ener?'ok':'no'), col=KCOL(kind);
+      // la zapata no autoenergizante gira levemente alrededor de A y se separa del tambor (efecto exagerado)
+      let del=0; if(kind==='no'){ const Mm=mul(ue((a0+a1)/2),r), L=hyp(sub(Mm,z.A))||1, t=rotAbout(Mm,z.A,1e-3); const away=int?hyp(t)<hyp(Mm):hyp(t)>hyp(Mm);
+        del=(away?1:-1)*((6+3*Math.sin(phi*6))/view.s)/L; }
+      const T=p=>rotAbout(p,z.A,del);
+      bandT(V(0,0),rw0,rw1,lo,hi,rgba(col,.55),col,T); bandT(V(0,0),rl0,rl1,lo,hi,C.lining,null,T);
+      const heelW=T(mul(ue(a0),int?rw0:rw1)); path([heelW,z.A],{stroke:col,w:5}); path([heelW,z.A],{stroke:rgba(col,.55),w:2.5});
+      ground(z.A, Math.atan2(z.A.y,z.A.x)+(int?Math.PI:0)); if(!(s.modo==='simplex'&&idx===1)) label(s.modo==='duplex'?'A'+(idx+1):'A',z.A,C.ink,'left',false,9,12);
+      // presiones
+      const nArr=11, Lmax=48;
+      const env=[];
+      for(let i=0;i<=nArr;i++){ const th=g.th1*DEG+(g.th2-g.th1)*DEG*i/nArr, ph=g.phiA*DEG+g.k*th, p=Math.sin(th)/Math.sin(z.thA), Mp=mul(ue(ph),r);
+        const pr=Number.isFinite(g.Pa)?g.Pa/PaMax:0, nh=int?mul(ue(ph),-1):ue(ph), Lp=p*Lmax*pr, Mo=int?mul(ue(ph),r*1.1):Mp; if(Lp>2) arrow(add(Mo,mul(nh,-Lp/view.s)),nh,Lp,C.hot,null,{w:1.5});
+        env.push(add(Mo,mul(nh,-Lp/view.s)));
+        if(s.fric&&i>0&&i<nArr&&i%2===0){ const t=mul(up(ph),rotSign(s)), Mf=T(mul(ue(ph),int?rw0-6/view.s:rw1+6/view.s)); arrow(Mf,t,Math.max(16,Lp*s.mu*2),C.l6,null,{w:2.6}); } }
+      if(s.fric&&R.one){ const ph=g.phiA*DEG+g.k*(g.th1+(g.th2-g.th1)*.5)*DEG; label('μ·dN',T(mul(ue(ph),int?rw0-24/view.s:rw1+24/view.s)),C.l6,'center',false,0,0,11); }
+      path(env,{stroke:C.hot,w:1,dash:[3,3]});
+      // fuerzas
+      if(Number.isFinite(z.F)&&z.F>0) arrow(T(z.toe),z.dirF,Math.max(48,z.F*k),C.b1,'F'+(R.one?'':(idx+1)),{tip:true,w:3});
+      if(!z.lock&&Number.isFinite(hyp(z.R))) arrow(z.A,z.R,hyp(z.R)*k,C.geo,'R'+(R.one?'':(idx+1)));
+      if(R.one){ line(V(0,0),z.A,C.muted,1,[5,4]); line(V(0,0),z.heel,C.muted,.8,[2,4]); line(V(0,0),z.toe,C.muted,.8,[2,4]);
+        { const ext=hyp(sub(z.foot,z.toe))+.25*r; line(add(z.toe,mul(z.dirF,-ext)),add(z.toe,mul(z.dirF,.15*r)),C.b1,1,[6,4]); // recta de acción de F
+          line(z.A,z.foot,C.b1,1.2); label('d',mul(add(z.A,z.foot),.5),C.b1,'center',false,0,-10);
+          const u=nrm(sub(z.A,z.foot)), m=8/view.s; path([add(z.foot,mul(u,m)),add(add(z.foot,mul(u,m)),mul(z.dirF,m*Math.sign(dot(sub(z.toe,z.foot),z.dirF)||1))),add(z.foot,mul(z.dirF,m*Math.sign(dot(sub(z.toe,z.foot),z.dirF)||1)))],{stroke:C.b1,w:1}); }
+        const rr=r*.42; path(arcPts(V(0,0),rr,0,g.th1*DEG,20),{stroke:C.muted,w:1}); path(arcPts(V(0,0),rr*1.25,0,g.th2*DEG,40),{stroke:C.muted,w:1});
+        label('θ₁',mul(ue(g.th1*DEG/2),rr+14/view.s),C.muted,'center'); label('θ₂',mul(ue(g.th2*DEG*.55),rr*1.25+14/view.s),C.muted,'center');
+        label('a',mul(z.A,.5),C.muted,'center',false,0,10); label('O',V(0,0),C.ink,'left',false,10,14);
+        const pm=mul(ue(g.phiA*DEG+g.k*z.thA),int?r-tl-tw:r+tl+tw); label('Pa',pm,C.hot,'center',false,0,int?14:-14); }
+      else { const mid=(g.th1+g.th2)/2*DEG, pm=mul(ue(g.phiA*DEG+g.k*mid),r*.55);
+        label(`${idx+1} · ${kind==='lock'?'autoblocante':(z.ener?'autoenergizante':'no autoenergizante')}`,pm,col,'center',false,0,0,11.5); } });
+    curl(V(0,0),Math.min(38,r*.17*view.s),-.3*Math.PI,-rotSign(s)*.6*Math.PI,C.warn,'T'); legend(); if(R.one&&s.det) zlDetail(s,R); },
+  stopped:(s,R)=>R.sh.some(z=>z.lock||z.lockMulti),
+  fix(s){ const int=s.modo!=='una'||s.tipo==='int'; const [lo,hi]=ZL.aLim(s); s.a=clamp(s.a,lo,hi); s.thM=clamp(s.thM,s.th1,Math.max(s.th2,s.th1+5)); },
+  aLim(s){ const int=s.modo!=='una'||s.tipo==='int'; return int?[Math.round(.3*s.r),Math.round(.85*s.r)]:[Math.round(1.15*s.r),Math.round(2.2*s.r)]; },
+  handles(s,R){ if(!R.one) return []; const g=R.sh[0].g;
+    return [{p:R.sh[0].heel,set:w=>{s.th1=clamp(Math.round(Math.atan2(w.y,w.x)/DEG),0,80); if(s.th2<s.th1+10) s.th2=s.th1+10;}},
+            {p:R.sh[0].toe,set:w=>{let a=Math.atan2(w.y,w.x)/DEG; if(a<0) a+=360; s.th2=clamp(Math.round(a),Math.max(40,s.th1+10),175);}},
+            {p:R.sh[0].A,set:w=>{const [lo,hi]=ZL.aLim(s); s.a=clamp(Math.round(hyp(w)),lo,hi);}}]
+      .concat(s.det?[{p:mul(ue(clamp(s.thM,s.th1,s.th2)*DEG),s.r),set:w=>{let a=Math.atan2(w.y,w.x)/DEG; if(a<-30) a+=360; s.thM=clamp(Math.round(a),s.th1,s.th2); s.sweep=false;}}]:[]); },
+  readout(s,R){ if(R.one){ const z=R.sh[0]; return [['Fuerza exterior F',z.lock?'autoblocante':fN(z.F),1],['Cupla de frenado T',fNm(z.T),1],['Brazo d',fmt(z.d,1)+' mm'],['Mn',fNm(z.Mn)],['Mf',fNm(z.Mf)],['θa',fmt(z.thA/DEG,0)+'°'],['Reacción en A',fN(hyp(z.R))],['Rx · Ry',fmt(z.R.x,0)+' · '+fmt(z.R.y,0)+' N']]; }
+    const rows=[]; R.sh.forEach((z,i)=>{ rows.push([`Zapata ${i+1}: Pa`,z.lockMulti?'autoblocante':fMPa(z.g.Pa)]); rows.push([`Zapata ${i+1}: T`,z.lockMulti?'—':fNm(z.T)]); });
+    rows.push(['Cupla total T',fNm(R.T),1]); return rows; },
+  state(s,R){ if(R.one){ const z=R.sh[0];
+      if(z.lock) return ['bad','Autoblocante: Mf ≥ Mn. La zapata se aplica sola.'];
+      return z.ener?[z.muLock<1.5*s.mu?'warn':'ok',`Autoenergizante: F = (Mn − Mf)/d. Se bloquearía con μ ≥ ${fmt(z.muLock,2)}${z.muLock<1.5*s.mu?' (menos de 1,5·μ: poco margen)':' (margen > 1,5·μ)'}.`]
+        :['warn','No autoenergizante para este giro: F = (Mn + Mf)/d.']; }
+    const nE=R.sh.filter(z=>z.ener).length;
+    return [nE===2?'ok':'warn', s.modo==='simplex'?`Simplex: una zapata autoenergizante y la otra no. Con la misma F, la zapata autoenergizante trabaja con más presión y aporta más cupla.`
+      :(nE===2?'Duplex: las dos zapatas son autoenergizantes en este sentido de giro.':'Duplex en sentido contrario: ninguna zapata es autoenergizante.')]; },
+  calc(s,R){ if(!R.one){ return R.sh.map((z,i)=>`Zapata ${i+1}: F = Pa·(Mn ${z.ener?'−':'+'} Mf)/d → Pa = <span class="v">${z.lockMulti?'—':fMPa(z.g.Pa)}</span>, T = <span class="v">${z.lockMulti?'—':fNm(z.T)}</span>`)
+      .concat([`T total = <span class="v">${fNm(R.T)}</span>`,'<span class="c">La misma presión de líquido da la misma F en las dos zapatas; cada zapata toma la Pa que necesita para equilibrarla.</span>']); }
+    const z=R.sh[0], g=z.g, t1=fmt(g.th1,0)+'°', t2=fmt(g.th2,0)+'°';
+    return [`C = Pa·b·r / sen θa = <span class="v">${fmt(g.Pa,2)}·${fmt(g.b,0)}·${fmt(g.r,0)} / sen ${fmt(z.thA/DEG,0)}° = ${fmt(z.C,0)} N</span>`,
+      `Mn = ¼·C·a·[2(θ₂−θ₁) − sen 2θ₂ + sen 2θ₁] = <span class="v">${fNm(z.MnA)}</span>`,
+      `Mf = C·μ·[r(cos θ₁ − cos θ₂) + (a/4)(cos 2θ₂ − cos 2θ₁)] = <span class="v">${fNm(z.MfA)}</span>`,
+      `F = (Mn ${z.ener?'−':'+'} Mf) / d = <span class="v">${z.lock?'— (autoblocante)':fN(z.F)}</span>  (d = ${fmt(z.d,1)} mm)`,
+      `T = C·μ·r·(cos θ₁ − cos θ₂) = <span class="v">${fNm(z.TA)}</span>`,
+      `<span class="c">θ₁ = ${t1}, θ₂ = ${t2}. F se aplica en el extremo de la zapata, tangente al tambor (perpendicular al radio O–extremo), como el pistón del cilindro. d es la distancia de A a su recta de acción.</span>`]; },
+  charts(s,R){ const z=R.sh[0], xs=[], ys=[]; for(let t=0;t<=180;t+=2){xs.push(t); ys.push(Math.sin(t*DEG)/Math.sin(z.thA));}
+    const ysz=xs.map((t,i)=>t>=s.th1&&t<=s.th2?ys[i]:NaN);
+    chart('chZL',{xs,series:[{ys,col:C.line,w:1.5,dash:[4,4]},{ys:ysz,col:C.hot,w:2.5}],xr:[0,180],yr:[0,Math.max(1.2,Math.ceil(1/Math.sin(z.thA)*10)/10)],xl:'θ [°]',yl:'P / Pa',shade:[s.th1,s.th2],
+      marks:[{x:z.thA/DEG,y:1,col:C.hot,t:'Pa'}].concat(s.det&&R.one?[{x:s.thM,y:Math.sin(s.thM*DEG)/Math.sin(z.thA),col:C.accent,t:'M'}]:[]),xt:[0,30,60,90,120,150,180]}); },
+  steps:[
+    {t:'La ley de presiones',p:'La presión no es uniforme: P = Pa·sen θ / sen θa. Mirá las flechas naranjas. ¿Dónde está la presión máxima? Llevá θ₂ por debajo de 90° y fijate dónde queda θa.',set:{modo:'una',tipo:'int',th1:10,th2:120,rot:'cw'}},
+    {t:'El forro cerca del talón',p:'Bajá θ₁ a 0° y subilo a 30°. ¿Cuánto cambia la cupla T? ¿Por qué conviene no poner material de fricción cerca de la articulación?',set:{th1:0},flash:'th1'},
+    {t:'Autoenergizante o no',p:'Invertí el sentido de giro. Compará F = (Mn − Mf)/d con F = (Mn + Mf)/d. ¿Cambia la cupla de frenado para la misma Pa?',set:{rot:'ccw'}},
+    {t:'Margen al autobloqueo',p:'Subí μ hasta que el freno se vuelva autoblocante (Mf ≥ Mn). El apunte recomienda verificar con μ′ entre 1,3·μ y 1,5·μ. ¿Tu diseño lo cumple?',set:{rot:'cw',mu:.32},flash:'mu'},
+    {t:'Simplex y Duplex',p:'Pasá a Simplex: con un solo cilindro, una zapata es autoenergizante y la otra no. Pasá a Duplex y compará la cupla total con la misma fuerza de cilindro. ¿Y si se invierte el giro (marcha atrás)?',set:{modo:'simplex',rot:'cw',th1:12,th2:165,a:115,r:150,det:false}},
+    {t:'¿Dónde aprieta más?',p:'El punto M recorre la zapata. Cada punto se mueve perpendicular a AM, y cuanto más lejos de A, más se mueve (δ crece). Pero solo la componente radial δr aprieta el forro. Mirá qué pasa al cruzar θ = 90°: cerca del cilindro δ es grande pero casi tangente.',set:{modo:'una',tipo:'int',rot:'cw',th1:10,th2:165,det:true,sweep:true,thM:10}}]
+};
+
+/* ---------- 03 · FRENO DE CINTA ---------- */
+function bandGeo(s){ const r=s.r, al=s.al*DEG, beta=(2*Math.PI-al)/2;
+  const TL=mul(ue(-Math.PI/2-beta),r), TR=mul(ue(-Math.PI/2+beta),r);
+  const dL=up(-Math.PI/2-beta), dR=mul(up(-Math.PI/2+beta),-1); // direcciones de los ramales hacia abajo
+  // A a distancia b del ramal izquierdo y a del ramal derecho (dentro de la V)
+  const nL=V(-dL.y,dL.x), nR=V(dR.y,-dR.x); // normales hacia adentro de la V
+  const pL=add(TL,mul(nL,s.modo==='dif'?s.b:0)), pR=add(TR,mul(nR,s.a));
+  const den=crs(dL,dR); if(Math.abs(den)<1e-9) return null;
+  const t=crs(sub(pR,pL),dR)/den, A=add(pL,mul(dL,t));
+  const QL=s.modo==='dif'?add(A,mul(nL,-s.b)):A, QR=add(A,mul(nR,-s.a));
+  const ok=dot(sub(QL,TL),dL)>0&&dot(sub(QR,TR),dR)>0;
+  const uL=nrm(sub(TL,QL)), uR=nrm(sub(TR,QR)); // tensión sobre la palanca: hacia el tambor
+  const mL=crs(sub(QL,A),uL), mR=crs(sub(QR,A),uR), mW=-s.c; // momentos por unidad (antihorario +)
+  return {TL,TR,dL,dR,A,QL,QR,uL,uR,mL,mR,mW,ok,beta}; }
+const CI={
+  title:'Freno de cinta',
+  hint:'',
+  def:{modo:'simple',rot:'cw',r:200,al:270,mu:.25,W:150,c:700,a:90,b:40,w:50,t:3,sadm:70},
+  ui:[
+    {h:'Tipo de freno',items:[{t:'seg',k:'modo',opts:[['simple','Simple'],['dif','Diferencial']]}]},
+    {h:'Sentido de giro del tambor',items:[{t:'seg',k:'rot',opts:ROT}]},
+    {h:'Geometría',items:[
+      {t:'range',k:'r',l:'Radio del tambor r',min:100,max:350,step:5,u:'mm'},
+      {t:'range',k:'al',l:'Ángulo de abrace α',min:200,max:320,step:1,u:'°'},
+      {t:'range',k:'a',l:'Brazo a (ramal derecho)',min:20,max:200,step:1,u:'mm'},
+      {t:'range',k:'b',l:'Brazo b (ramal izquierdo)',min:5,max:200,step:1,u:'mm',when:s=>s.modo==='dif'},
+      {t:'range',k:'c',l:'Brazo de la fuerza W, c',min:200,max:1200,step:10,u:'mm'}]},
+    {h:'Material y carga',items:[
+      {t:'range',k:'mu',l:'Coeficiente de fricción μ',min:.1,max:.5,step:.01,d:2},
+      {t:'range',k:'W',l:'Fuerza en la palanca W',min:10,max:600,step:5,u:'N'},
+      {t:'range',k:'w',l:'Ancho de la cinta',min:20,max:150,step:1,u:'mm'},
+      {t:'range',k:'t',l:'Espesor de la cinta t',min:1,max:8,step:.5,u:'mm',d:1},
+      {t:'range',k:'sadm',l:'Tensión admisible σadm',min:30,max:200,step:5,u:'MPa'}]},
+    {h:'Tensión a lo largo de la cinta',items:[{t:'chart',id:'chCI'},{t:'note',x:'Teorema de Prony: F₁/F₂ = e^(μ·α). La presión sobre el tambor es proporcional a la tensión: P = F/(b·r).'}]},
+    {h:'Cálculo',items:[{t:'state'},{t:'calc'}]}],
+  compute(s){ const G=bandGeo(s), e=Math.exp(s.mu*s.al*DEG);
+    if(!G) return {bad:true,e};
+    const leftTight=s.rot==='cw'; // el ramal tenso es el que "recibe" la superficie del tambor
+    const mT=leftTight?G.mL:G.mR, mS=leftTight?G.mR:G.mL;
+    const den=mS+e*mT, F2=-s.W*G.mW/den, lock=!(F2>0)||!Number.isFinite(F2);
+    const F1=e*F2, Fu=F1-F2, T=Fu*s.r, Pa=F1/(s.w*s.r), sig=F1/(s.w*s.t);
+    return {G,e,leftTight,F1,F2,Fu,T,Pa,sig,lock,mT,mS}; },
+  bbox(s){ const G=bandGeo(s), r=s.r; let x0=-1.2*r, x1=1.2*r, y0=-1.5*r, y1=1.15*r;
+    if(G){ x1=Math.max(x1,G.A.x+s.c+.15*r); y0=Math.min(y0,G.A.y-.25*r,G.QL.y-.2*r,G.QR.y-.2*r,-1.12*r-.3*r); } return [x0,y0,x1,y1]; },
+  draw(s,R){ const r=s.r; drum(V(0,0),r,phi);
+    curl(V(0,0),Math.min(70,r*.35*view.s),.6*Math.PI,rotSign(s)*.5*Math.PI,C.muted,'ω');
+    if(R.bad||!R.G) return; const G=R.G, tb=Math.max(2,s.t*3);
+    // cinta sobre el tambor con espesor proporcional a la tensión
+    const a0=-Math.PI/2-G.beta, a1=-Math.PI/2+G.beta-2*Math.PI; // recorre la parte superior
+    const n=60, Fmax=R.lock?1:R.F1;
+    for(let i=0;i<n;i++){ const t0=a0+(a1-a0)*i/n, t1=a0+(a1-a0)*(i+1)/n; const fr=R.leftTight?i/n:1-i/n;
+      const F=R.lock?1:(R.leftTight? R.F1*Math.exp(-s.mu*s.al*DEG*fr) : R.F2*Math.exp(s.mu*s.al*DEG*fr));
+      const th=(1.5+5*F/Fmax)/view.s; band(V(0,0),r,r+th+tb/view.s*.3,Math.min(t0,t1),Math.max(t0,t1),C.lining,null); }
+    // presiones (radiales)
+    if(!R.lock) for(let i=1;i<12;i++){ const fr=i/12, ang=a0+(a1-a0)*fr; const F=R.leftTight?R.F1*Math.exp(-s.mu*s.al*DEG*fr):R.F2*Math.exp(s.mu*s.al*DEG*fr);
+      const L=40*F/R.F1, Mp=mul(ue(ang),r+6/view.s); arrow(add(Mp,mul(ue(ang),L/view.s)),mul(ue(ang),-1),L,C.hot,null,{w:1.4}); }
+    // ramales
+    path([G.TL,G.QL],{stroke:C.lining,w:3}); path([G.TR,G.QR],{stroke:C.lining,w:3});
+    // palanca
+    const yl=Math.min(G.A.y,-1.12*r,G.QR.y-.04*r), K=V(G.A.x,yl), E=V(G.A.x+s.c,yl); // palanca acodada: el brazo de W sigue siendo c
+    const lev=yl<G.A.y-1?[G.A,K,E]:[G.A,E];
+    path(lev,{stroke:C.ink,w:6}); path(lev,{stroke:C.steel,w:3.4});
+    for(const q of [G.QL,G.QR]) if(hyp(sub(q,G.A))>1){ path([G.A,q],{stroke:C.ink,w:6}); path([G.A,q],{stroke:C.steel,w:3.4}); }
+    ground(G.A,Math.PI/2); pin(G.QR); if(s.modo==='dif') pin(G.QL); label('A',G.A,C.ink,'right',false,-10,-12);
+    dim(V(G.A.x,yl),E,-34,'c'); if(s.modo==='dif') dim(G.A,G.QL,10,'b'); dim(G.A,G.QR,-10,'a');
+    if(R.lock){ arrow(E,V(0,-1),70,C.b1,'W',{tip:true}); return; }
+    const k=forceScale([R.F1,R.F2,s.W],120);
+    const tL=R.leftTight?R.F1:R.F2, tR=R.leftTight?R.F2:R.F1;
+    arrow(G.QL,G.uL,tL*k,C.l2,R.leftTight?'F₁':'F₂'); arrow(G.QR,G.uR,tR*k,C.l2,R.leftTight?'F₂':'F₁');
+    arrow(E,V(0,-1),Math.max(30,s.W*k),C.b1,'W',{tip:true});
+    label(R.leftTight?'ramal tenso':'ramal flojo',G.TL,C.muted,'right',false,-12,0,11); label(R.leftTight?'ramal flojo':'ramal tenso',G.TR,C.muted,'left',false,12,0,11);
+    curl(V(0,0),Math.min(40,r*.2*view.s),-.3*Math.PI,-rotSign(s)*.6*Math.PI,C.warn,'T'); },
+  stopped:(s,R)=>!!R.lock,
+  handles(){ return []; },
+  readout(s,R){ if(R.bad||!R.G) return [['Geometría','no válida',1]]; if(R.lock) return [['Condición','AUTOBLOCANTE',1],['e^(μα)',fmt(R.e,3)]];
+    return [['Ramal tenso F₁',fN(R.F1),1],['Ramal flojo F₂',fN(R.F2)],['e^(μα)',fmt(R.e,3)],['Fuerza útil Fu',fN(R.Fu)],['Cupla de frenado T',fNm(R.T),1],['Presión máx. Pa',fMPa(R.Pa)],['Tensión en la cinta',fmt(R.sig,1)+' MPa']]; },
+  state(s,R){ if(R.bad||!R.G||!R.G.ok) return ['bad','La geometría no es válida: achicá los brazos a y b o cambiá el ángulo de abrace.'];
+    if(R.lock) return ['bad', s.modo==='dif'?'Autoblocante: el momento del ramal que colabora con W supera al otro. El freno se aplica solo en este sentido de giro.':'Sin solución con W hacia abajo.'];
+    if(R.sig>s.sadm) return ['bad',`La cinta está sobrecargada: σ = F₁/(b·t) = ${fmt(R.sig,1)} MPa > σadm.`];
+    const tightLever=s.modo==='simple'&&!R.leftTight;
+    if(s.modo==='simple') return [tightLever?'warn':'ok', tightLever?'La palanca tira del ramal tenso: hace falta más W para la misma cupla.':'La palanca tira del ramal flojo: es el sentido más eficiente.'];
+    return [R.mS*R.mT<0?'ok':'warn', `Freno diferencial: el ramal ${R.leftTight?'flojo (derecho)':'flojo (izquierdo)'} ${(R.leftTight?R.G.mR:R.G.mL)*R.G.mW>0?'colabora con W: autoenergizante':'se opone a W'}.`]; },
+  calc(s,R){ if(R.bad||!R.G) return ['—'];
+    const G=R.G, b=s.modo==='dif'?s.b:0;
+    const out=[`e^(μ·α) = e^(${fmt(s.mu,2)}·${fmt(s.al*DEG,3)}) = <span class="v">${fmt(R.e,3)}</span>`];
+    if(s.modo==='simple'){ out.push(`ΣM<sub>A</sub> = W·c − F<sub>palanca</sub>·a = 0 → F<sub>palanca</sub> = W·c/a = <span class="v">${fN(s.W*s.c/s.a)}</span> (${R.leftTight?'ramal flojo F₂':'ramal tenso F₁'})`); }
+    else if(!R.leftTight){ out.push(`ΣM<sub>A</sub> = W·c + F₂·b − F₁·a = 0`); out.push(`W = Fu·(a·e^(μα) − b) / [c·(e^(μα) − 1)]`); out.push(`a·e^(μα) = <span class="v">${fmt(s.a*R.e,1)} mm</span>  vs  b = <span class="v">${fmt(b,0)} mm</span> → ${b>=s.a*R.e?'autoblocante':'controlable'}`); }
+    else { out.push(`ΣM<sub>A</sub> = W·c + F₁·b − F₂·a = 0 (giro invertido: el ramal tenso es el de b)`); out.push(`a = <span class="v">${fmt(s.a,0)} mm</span>  vs  b·e^(μα) = <span class="v">${fmt(b*R.e,1)} mm</span> → ${s.a<=b*R.e?'autoblocante':'controlable'}`); }
+    if(!R.lock){ out.push(`F₁ = <span class="v">${fN(R.F1)}</span>, F₂ = F₁/e^(μα) = <span class="v">${fN(R.F2)}</span>`);
+      out.push(`T = (F₁ − F₂)·r = <span class="v">${fNm(R.T)}</span>`); out.push(`Pa = F₁/(b·r) = <span class="v">${fMPa(R.Pa)}</span>   σ = F₁/(b·t) = <span class="v">${fmt(R.sig,1)} MPa</span>`); }
+    return out; },
+  charts(s,R){ if(R.bad||R.lock) { chart('chCI',{xs:[0,1],series:[],xr:[0,s.al],yr:[0,1],xl:'φ [°]',yl:'F [N]'}); return; }
+    const xs=[], ys=[]; for(let a=0;a<=s.al;a+=3){xs.push(a); ys.push(R.F2*Math.exp(s.mu*a*DEG));}
+    chart('chCI',{xs,series:[{ys,col:C.l2,w:2.5}],xr:[0,s.al],yr:[0,Math.ceil(R.F1*1.1/50)*50||1],xl:'φ desde el ramal flojo [°]',yl:'F [N]',
+      marks:[{x:0,y:R.F2,col:C.l2,t:'F₂'},{x:s.al,y:R.F1,col:C.l2,t:'F₁'}],xt:[0,90,180,270].filter(x=>x<=s.al).concat([s.al])}); },
+  steps:[
+    {t:'Teorema de Prony',p:'La tensión crece a lo largo del abrace desde F₂ hasta F₁ = F₂·e^(μα). Mirá el gráfico y el espesor de la cinta en el dibujo. ¿Dónde está la presión máxima sobre el tambor?',set:{modo:'simple',rot:'cw',al:270,mu:.25}},
+    {t:'Ángulo de abrace',p:'Aumentá α de 200° a 320°. ¿Cómo cambia la relación F₁/F₂ y la cupla para la misma W?',set:{al:200},flash:'al'},
+    {t:'El sentido de giro importa',p:'Invertí el giro. Ahora la palanca tira del ramal tenso. ¿Cuánta W más hace falta para la misma cupla?',set:{rot:'ccw'}},
+    {t:'Freno diferencial',p:'Con el freno diferencial, el ramal flojo colabora con W. Subí b hasta que b ≥ a·e^(μα): el freno queda autoblocante. ¿Para qué sirve esto en un montacargas?',set:{modo:'dif',rot:'ccw',a:90,b:40},flash:'b'}]
+};
+
+/* ---------- 04 · EMBRAGUE DE DISCO ---------- */
+const EM={
+  title:'Embrague de disco',
+  hint:'Arrastrá los bordes del forro para cambiar r₁ y r₂',
+  def:{hip:'des',r1:60,r2:110,mu:.3,i:2,F:4000,Padm:.5},
+  ui:[
+    {h:'Hipótesis',items:[{t:'seg',k:'hip',opts:[['pre','Presión uniforme'],['des','Desgaste uniforme']]}]},
+    {h:'Geometría',items:[
+      {t:'range',k:'r1',l:'Radio interior r₁',min:20,max:200,step:1,u:'mm'},
+      {t:'range',k:'r2',l:'Radio exterior r₂',min:40,max:250,step:1,u:'mm'},
+      {t:'range',k:'i',l:'Pares de superficies i',min:1,max:8,step:1,d:0}]},
+    {h:'Material y carga',items:[
+      {t:'range',k:'mu',l:'Coeficiente de fricción μ',min:.05,max:.5,step:.01,d:2},
+      {t:'range',k:'F',l:'Fuerza axial F',min:200,max:15000,step:100,u:'N'},
+      {t:'range',k:'Padm',l:'Presión admisible',min:.1,max:1.5,step:.01,u:'MPa',d:2}]},
+    {h:'Presión en función del radio',items:[{t:'chart',id:'chEM'}]},
+    {h:'Cálculo',items:[{t:'state'},{t:'calc'}]}],
+  compute(s){ const r1=Math.min(s.r1,s.r2-5), r2=s.r2;
+    const Pp=s.F/(Math.PI*(r2*r2-r1*r1)), Tp=2/3*s.mu*s.F*(r2**3-r1**3)/(r2*r2-r1*r1)*s.i;
+    const Pd=s.F/(2*Math.PI*r1*(r2-r1)), Td=s.mu*s.F*(r1+r2)/2*s.i;
+    const pre=s.hip==='pre'; return {r1,r2,Pa:pre?Pp:Pd,T:pre?Tp:Td,Tp,Td,Pp,Pd,rm:(r1+r2)/2,ratio:r1/r2,pre}; },
+  bbox(s){ const R=s.r2*1.25; return [-R,-R,R,R]; },
+  draw(s,R){ const r1=R.r1, r2=R.r2; circle(V(0,0),r2*1.12,C.ink,1.4,C.steel);
+    // forro coloreado según la presión
+    { const O=S(V(0,0)), g=ctx.createRadialGradient(O.x,O.y,r1*view.s,O.x,O.y,r2*view.s);
+      for(let i=0;i<=10;i++){ const rr=r1+(r2-r1)*i/10, p=R.pre?1:r1/rr; g.addColorStop(i/10,rgba(C.lining,.25+.75*p)); }
+      ctx.save(); ctx.beginPath(); ctx.arc(O.x,O.y,r2*view.s,0,2*Math.PI); ctx.arc(O.x,O.y,r1*view.s,0,2*Math.PI,true); ctx.fillStyle=g; ctx.fill('evenodd'); ctx.restore(); }
+    circle(V(0,0),r1,C.ink,1.2); circle(V(0,0),r2,C.ink,1.2);
+    for(let j=0;j<8;j++){ const a=phi+j*Math.PI/4; line(mul(ue(a),r1*.55),mul(ue(a),r1*.85),C.muted,1.2); }
+    circle(V(0,0),r1*.35,C.ink,1.2,C.canvas);
+    // anillo elemental
+    const re=r1+(r2-r1)*.62, dr=(r2-r1)*.07; band(V(0,0),re-dr/2,re+dr/2,.15*Math.PI,.42*Math.PI,C.b1f,C.b1);
+    label('dA = 2π·r·dr',mul(ue(.3*Math.PI),r2*1.18),C.b1,'center');
+    // cotas
+    dim(V(0,0),mul(ue(-.2*Math.PI),r1),0,'r₁'); dim(V(0,0),mul(ue(-.55*Math.PI),r2),0,'r₂');
+    circle(V(0,0),R.rm,C.accent,1,null,[5,5]); label('rm',mul(ue(.85*Math.PI),R.rm),C.accent,'center',false,0,-10);
+    curl(V(0,0),Math.min(60,r2*1.2*view.s),.95*Math.PI,-.4*Math.PI,C.warn,'T'); },
+  handles(s){ return [{p:V(s.r1,0),set:w=>{s.r1=clamp(Math.round(hyp(w)),20,s.r2-10);}},{p:V(-s.r2,0),set:w=>{s.r2=clamp(Math.round(hyp(w)),s.r1+10,250);}}]; },
+  readout(s,R){ return [['Presión máxima Pa',fMPa(R.Pa),1],['',fkg(R.Pa)],['Cupla transmitida T',fNm(R.T),1],['Radio medio rm',fmt(R.rm,1)+' mm'],['r₁ / r₂',fmt(R.ratio,2)],['T desgaste / T presión',fmt(R.Td/R.Tp,3)]]; },
+  state(s,R){ if(R.Pa>s.Padm) return ['bad',`La presión máxima supera la admisible (${fMPa(R.Pa)} > ${fMPa(s.Padm)}). Aumentá el área o reducí F.`];
+    if(R.ratio<.45||R.ratio>.8) return ['warn',`r₁/r₂ = ${fmt(R.ratio,2)}: fuera del rango usual 0,45 a 0,8.`];
+    return ['ok',`r₁/r₂ = ${fmt(R.ratio,2)} dentro del rango usual (0,45 a 0,8). ${R.pre?'Hipótesis válida para discos nuevos y rígidos.':'Hipótesis usada para diseñar: da la menor cupla.'}`]; },
+  calc(s,R){ const r1=fmt(R.r1,0), r2=fmt(R.r2,0); return R.pre?[
+      `Pa = F / [π(r₂² − r₁²)] = <span class="v">${fMPa(R.Pp)}</span>`,
+      `T = ⅔·μ·F·(r₂³ − r₁³)/(r₂² − r₁²) · i = <span class="v">${fNm(R.Tp)}</span>`,
+      `<span class="c">Con desgaste uniforme la misma F daría T = ${fNm(R.Td)} (${fmt((R.Td/R.Tp-1)*100,1)} %).</span>`]:[
+      `P·r = Pa·r₁ = cte → P = Pa·r₁/r`,
+      `Pa = F / [2π·r₁·(r₂ − r₁)] = <span class="v">${fMPa(R.Pd)}</span>`,
+      `T = μ·F·(r₁ + r₂)/2 · i = μ·F·rm·i = <span class="v">${fNm(R.Td)}</span>`,
+      `<span class="c">Con presión uniforme la misma F daría T = ${fNm(R.Tp)}: el disco nuevo transmite un poco más.</span>`]; },
+  charts(s,R){ const xs=[], yp=[], yd=[]; for(let i=0;i<=40;i++){const r=R.r1+(R.r2-R.r1)*i/40; xs.push(r); yp.push(R.Pp); yd.push(R.Pd*R.r1/r);}
+    chart('chEM',{xs,series:[{ys:yp,col:R.pre?C.hot:C.line,w:R.pre?2.5:1.5,dash:R.pre?[]:[4,4]},{ys:yd,col:R.pre?C.line:C.hot,w:R.pre?1.5:2.5,dash:R.pre?[4,4]:[]}],
+      xr:[R.r1,R.r2],yr:[0,Math.max(R.Pd,R.Pp,s.Padm)*1.15],xl:'r [mm]',yl:'P [MPa]',xt:[R.r1,R.rm,R.r2].map(x=>[x,fmt(x,0)])}); },
+  steps:[
+    {t:'Dos hipótesis',p:'Con discos nuevos se supone presión uniforme; con el uso el desgaste se vuelve uniforme y P·r = cte. Alterná entre las dos y mirá el gráfico: ¿dónde aparece la presión máxima en cada caso?',set:{hip:'pre',r1:60,r2:110,F:4000,i:2}},
+    {t:'¿Cuál se usa para diseñar?',p:'Con la misma F, compará la cupla de las dos hipótesis. ¿Por qué se diseña con desgaste uniforme?',set:{hip:'des'}},
+    {t:'Relación de radios',p:'Mové r₁ con r₂ fijo. La relación usual r₁/r₂ está entre 0,45 y 0,8. ¿Qué pasa con la presión máxima cuando r₁ es muy chico?',set:{r1:30},flash:'r1'},
+    {t:'Más pares de superficies',p:'Duplicá los pares de superficies i. ¿Cómo cambia la cupla? Es la idea de los embragues multidisco, sobre todo cuando trabajan en aceite y μ es bajo.',set:{i:4,mu:.08},flash:'i'}]
+};
+
+/* ---------- 05 · FRENO DE DISCO ---------- */
+const FD={
+  title:'Freno de disco',
+  hint:'',
+  def:{F:2500,mu:.38,ri:95,ro:135,ph:50,Padm:.69,Rd:145},
+  ui:[
+    {h:'Pastilla',items:[
+      {t:'range',k:'ri',l:'Radio interior de la pastilla',min:40,max:200,step:1,u:'mm'},
+      {t:'range',k:'ro',l:'Radio exterior de la pastilla',min:60,max:240,step:1,u:'mm'},
+      {t:'range',k:'ph',l:'Ángulo de la pastilla',min:20,max:90,step:1,u:'°'}]},
+    {h:'Material y carga',items:[
+      {t:'range',k:'mu',l:'Coeficiente de fricción μ',min:.1,max:.6,step:.01,d:2},
+      {t:'range',k:'F',l:'Fuerza del pistón F',min:200,max:12000,step:50,u:'N'},
+      {t:'range',k:'Padm',l:'Presión admisible',min:.2,max:3,step:.01,u:'MPa',d:2}]},
+    {h:'Cálculo',items:[{t:'state'},{t:'calc'},{t:'note',x:'Dos pares de superficies activas (pastilla–disco de cada lado): T = 2·F·μ·r. La pastilla cubre una parte chica del disco; el resto queda libre para disipar el calor.'}]}],
+  compute(s){ const ri=Math.min(s.ri,s.ro-5), ro=s.ro, ph=s.ph*DEG, A=ph/2*(ro*ro-ri*ri), r=2/3*(ro**3-ri**3)/(ro*ro-ri*ri), T=2*s.F*s.mu*r, P=s.F/A, frac=A/(Math.PI*(ro*ro-ri*ri));
+    return {ri,ro,A,r,T,P,frac}; },
+  bbox(s){ const R=Math.max(s.ro+15,s.Rd)*1.2; return [-R,-R,R,R]; },
+  draw(s,R){ const Rd=Math.max(s.ro+12,s.Rd); circle(V(0,0),Rd,C.ink,1.5,C.steel);
+    for(let i=0;i<24;i++){ const a=phi+i*2*Math.PI/24; for(const rr of [R.ri+(R.ro-R.ri)*.3,R.ri+(R.ro-R.ri)*.7]) circle(mul(ue(a+(rr>R.r?.13:0)),rr),Math.max(1.5,(R.ro-R.ri)*.05),C.muted,1,C.canvas); }
+    circle(V(0,0),R.ri*.75,C.ink,1.3,C.canvas); for(let j=0;j<5;j++) circle(mul(ue(phi+j*2*Math.PI/5),R.ri*.45),R.ri*.06,C.muted,1,C.steel);
+    circle(V(0,0),R.ri,C.muted,.8,null,[3,4]); circle(V(0,0),R.ro,C.muted,.8,null,[3,4]);
+    // pastilla y pinza (fija, arriba)
+    const a0=Math.PI/2-s.ph*DEG/2, a1=Math.PI/2+s.ph*DEG/2;
+    band(V(0,0),R.ro+4,R.ro+.18*R.ro,a0-.12,a1+.12,C.panel,C.ink);
+    band(V(0,0),R.ri,R.ro,a0,a1,C.lining,C.ink); label('pastilla',V(0,R.ro+.25*R.ro),C.ink,'center');
+    circle(V(0,0),R.r,C.accent,1,null,[5,5]); dim(V(0,0),mul(ue(Math.PI/2),R.r),-30,'r');
+    const k=110/Math.max(1,s.mu*s.F); arrow(V(0,R.r),V(-1,0),s.mu*s.F*k,C.b2,'2·μF');
+    curl(V(0,0),Math.min(50,R.ri*.6*view.s),-.6*Math.PI,-.6*Math.PI,C.muted,'ω');
+    curl(V(0,0),Math.min(36,R.ri*.42*view.s),-.2*Math.PI,.5*Math.PI,C.warn,'T'); },
+  handles(){ return []; },
+  readout(s,R){ return [['Cupla de frenado T',fNm(R.T),1],['Radio medio r',fmt(R.r,1)+' mm'],['Área de la pastilla',fmt(R.A,0)+' mm²'],['Presión P = F/A',fMPa(R.P),1],['',fkg(R.P)],['Pastilla / pista',fmt(R.frac*100,1)+' %']]; },
+  state(s,R){ return R.P>s.Padm?['bad',`La presión sobre la pastilla supera la admisible (${fMPa(R.P)} > ${fMPa(s.Padm)}).`]:['ok',`Presión dentro de lo admisible. La pastilla ocupa el ${fmt(R.frac*100,0)} % de la pista: el resto del disco se enfría mientras gira.`]; },
+  calc(s,R){ return [`r = ⅔·(r<sub>e</sub>³ − r<sub>i</sub>³)/(r<sub>e</sub>² − r<sub>i</sub>²) = <span class="v">${fmt(R.r,1)} mm</span>`,
+    `T = 2·F·μ·r = 2·${fmt(s.F,0)}·${fmt(s.mu,2)}·${fmt(R.r,1)} = <span class="v">${fNm(R.T)}</span>`,
+    `P = F/A = <span class="v">${fMPa(R.P)}</span>  (${fkg(R.P)})`]; },
+  steps:[
+    {t:'Dos superficies, una fuerza',p:'Un solo pistón aprieta las dos pastillas gracias a la pinza flotante. ¿Por qué la cupla tiene un 2 delante?',set:{F:2500,mu:.38}},
+    {t:'Dónde actúa la fricción',p:'Agrandá la pastilla hacia afuera (re). ¿Cambia más la cupla o la presión? ¿Qué conviene para un vehículo más pesado?',set:{ro:160},flash:'ro'},
+    {t:'Disipación del calor',p:'Compará el porcentaje de pista cubierto por la pastilla con un freno de cinta, donde la cinta cubre casi todo el tambor. ¿Cuál se enfría mejor?',set:{ph:50}}]
+};
+
+/* ---------- 06 · CALOR Y MATERIALES ---------- */
+const CA={
+  title:'Calor generado y materiales', nogrid:true,
+  hint:'',
+  def:{m:1200,v1:100,v2:0,fr:.3,md:8,c:460,T0:25},
+  ui:[
+    {h:'Vehículo',items:[
+      {t:'range',k:'m',l:'Masa del vehículo',min:200,max:40000,step:50,u:'kg'},
+      {t:'range',k:'v1',l:'Velocidad inicial',min:10,max:200,step:1,u:'km/h'},
+      {t:'range',k:'v2',l:'Velocidad final',min:0,max:150,step:1,u:'km/h'},
+      {t:'range',k:'fr',l:'Fracción que absorbe este freno',min:.05,max:1,step:.01,d:2}]},
+    {h:'Freno',items:[
+      {t:'range',k:'md',l:'Masa del disco o tambor',min:1,max:80,step:.5,u:'kg',d:1},
+      {t:'range',k:'c',l:'Calor específico c',min:400,max:900,step:10,u:'J/kg·K'},
+      {t:'range',k:'T0',l:'Temperatura inicial',min:-10,max:150,step:1,u:'°C'}]},
+    {h:'Cálculo',items:[{t:'state'},{t:'calc'}]},
+    {h:'Revestimientos sobre fundición o acero (orientativo)',items:[{t:'html',x:`<table class="mat"><tbody>
+      <tr><td>Coeficiente de rozamiento dinámico en seco</td><td>0,25 a 0,45</td></tr>
+      <tr><td>Coeficiente de rozamiento dinámico en aceite</td><td>0,06 a 0,09</td></tr>
+      <tr><td>Presión admisible sobre área proyectada</td><td>4 a 7 kgf/cm²<br>0,39 a 0,69 MPa</td></tr>
+      <tr><td>Temperatura máxima de trabajo</td><td>200 a 260 °C</td></tr></tbody></table>`}]}],
+  compute(s){ const v1=s.v1/3.6, v2=Math.min(s.v2,s.v1)/3.6, E=.5*s.m*(v1*v1-v2*v2)*s.fr, dT=E/(s.md*s.c), Tf=s.T0+dT; return {E,dT,Tf}; },
+  bbox(){ return [-260,-210,260,230]; },
+  draw(s,R){ // termómetro
+    const x=-40, y0=-150, y1=170, T2y=t=>y0+(y1-y0)*clamp(t,0,400)/400;
+    band(V(x,y0-20),0,22,0,2*Math.PI,C.panel,C.ink);
+    path([V(x-12,y0),V(x-12,y1),V(x+12,y1),V(x+12,y0)],{fill:C.panel,stroke:C.ink,w:1.4});
+    path([V(x-12,T2y(200)),V(x-12,T2y(260)),V(x+12,T2y(260)),V(x+12,T2y(200))],{fill:C.b1f});
+    const col=R.Tf>260?C.warn:(R.Tf>200?C.hot:C.geo);
+    circle(V(x,y0-20),16,null,1,col); path([V(x-6,y0-10),V(x-6,T2y(R.Tf)),V(x+6,T2y(R.Tf)),V(x+6,y0-10)],{fill:col});
+    for(let t=0;t<=400;t+=50){ line(V(x+12,T2y(t)),V(x+22,T2y(t)),C.muted,1); label(t+' °C',V(x+28,T2y(t)),C.muted,'left'); }
+    label('200 a 260 °C: máximo del revestimiento',V(x+90,T2y(230)),C.hot,'left');
+    label(`${fmt(R.Tf,0)} °C`,V(x-24,T2y(R.Tf)),col,'right',false,0,0,15);
+    // barra de energía
+    const ex=-210, eh=Math.min(300,40+R.E/2000);
+    path([V(ex,-150),V(ex,-150+eh),V(ex+40,-150+eh),V(ex+40,-150)],{fill:C.b2f,stroke:C.b2,w:1.4});
+    label(fmt(R.E/1000,1)+' kJ',V(ex+20,-150+eh+14),C.b2,'center'); label('energía',V(ex+20,-170),C.muted,'center'); },
+  handles(){ return []; },
+  readout(s,R){ return [['Energía a absorber',fmt(R.E/1000,1)+' kJ',1],['Aumento de temperatura',fmt(R.dT,0)+' °C'],['Temperatura final',fmt(R.Tf,0)+' °C',1]]; },
+  state(s,R){ return R.Tf>260?['bad','Supera la temperatura máxima de trabajo del revestimiento (200 a 260 °C).']:R.Tf>200?['warn','Entra en la zona límite del revestimiento (200 a 260 °C).']:['ok','Por debajo de la temperatura máxima del revestimiento.']; },
+  calc(s,R){ return [`E = ½·m·(v₁² − v₂²)·fracción = <span class="v">${fmt(R.E/1000,1)} kJ</span>`,`ΔT = E / (m<sub>disco</sub>·c) = <span class="v">${fmt(R.dT,0)} °C</span>`,
+    '<span class="c">Estimación sin pérdidas al aire: supone que todo el calor queda en el disco o tambor durante la frenada. Es el caso más desfavorable de una frenada corta.</span>']; },
+  steps:[
+    {t:'Energía a absorber',p:'Un freno transforma energía cinética en calor. Duplicá la velocidad inicial: ¿cuánto aumenta la energía? ¿Y la temperatura?',set:{v1:100,v2:0}},
+    {t:'Masa que almacena calor',p:'Aumentá la masa del disco. ¿Por qué los vehículos pesados usan discos ventilados o tambores grandes?',set:{md:8},flash:'md'},
+    {t:'Frenadas repetidas',p:'Si la frenada se repite antes de que el disco se enfríe, la temperatura inicial ya es alta. Subí la temperatura inicial a 120 °C y repetí.',set:{T0:120},flash:'T0'}]
+};
+
+const MODS={zc:ZC,zl:ZL,ci:CI,em:EM,fd:FD,ca:CA};
+const STATE={}; Object.keys(MODS).forEach(k=>STATE[k]={...MODS[k].def});
+let mod='zc'; const M=()=>MODS[mod], st=()=>STATE[mod];
+let RES=null;
+
+/* ---------------- panel ---------------- */
+function buildPanel(){ const m=M(), s=st(), box=$('#ctrls'); box.innerHTML='';
+  m.ui.forEach(sec=>{ const items=sec.items.filter(it=>!it.when||it.when(s)); if(!items.filter(it=>it.t!=='note').length) return;
+    const el=document.createElement('div'); el.className='sec'; el.innerHTML=`<h3>${sec.h}</h3>`;
+    items.forEach(it=>{
+      if(it.t==='seg'){ const g=document.createElement('div'); g.className='seg'; g.setAttribute('role','group');
+        g.innerHTML=it.opts.map(([v,t])=>`<button type="button" data-k="${it.k}" data-v="${v}" aria-pressed="${s[it.k]===v}">${t}</button>`).join(''); el.appendChild(g); }
+      else if(it.t==='range'){ const f=document.createElement('div'); f.className='field'; f.dataset.k=it.k; const id='in-'+mod+'-'+it.k;
+        const [mn,mx]=lim(it,s); f.innerHTML=`<label for="${id}">${it.l}</label><output id="o-${id}"></output><input type="range" id="${id}" min="${mn}" max="${mx}" step="${it.step}" value="${s[it.k]}" data-k="${it.k}">`;
+        el.appendChild(f); }
+      else if(it.t==='chk'){ const l=document.createElement('label'); l.className='chk'; l.innerHTML=`<input type="checkbox" data-k="${it.k}" ${s[it.k]?'checked':''}>${it.l}`; el.appendChild(l); }
+      else if(it.t==='chart'){ const c=document.createElement('canvas'); c.className='pchart'; c.id=it.id; el.appendChild(c); }
+      else if(it.t==='note'&&false){ const p=document.createElement('p'); p.className='cap'; p.textContent=it.x; el.appendChild(p); }
+      else if(it.t==='note'){ const p=document.createElement('p'); p.className='cap'; p.textContent=it.x; el.appendChild(p); }
+      else if(it.t==='html'){ const d=document.createElement('div'); d.innerHTML=it.x; el.appendChild(d); }
+      else if(it.t==='state'){ const d=document.createElement('div'); d.className='state'; d.id='stateBox'; el.appendChild(d); }
+      else if(it.t==='calc'){ const d=document.createElement('div'); d.className='calc'; d.id='calcBox'; el.appendChild(d); } });
+    box.appendChild(el); });
+  syncInputs(); }
+const lim=(it,s)=>[typeof it.min==='function'?it.min(s):it.min, typeof it.max==='function'?it.max(s):it.max];
+function itemSpec(k){ for(const sec of M().ui) for(const it of sec.items) if(it.k===k) return it; }
+function syncInputs(){ const s=st(); if(M().fix) M().fix(s); document.querySelectorAll('#ctrls input[type=range]').forEach(inp=>{ const k=inp.dataset.k, it=itemSpec(k), [mn,mx]=lim(it,s); inp.min=mn; inp.max=mx; inp.value=s[k];
+    const p=(s[k]-mn)/(mx-mn)*100; inp.style.setProperty('--fill',clamp(p,0,100)+'%');
+    const o=document.getElementById('o-'+inp.id); if(o) o.textContent=fmt(s[k],it.d??0)+(it.u?' '+it.u:''); });
+  document.querySelectorAll('#ctrls .seg button').forEach(b=>b.setAttribute('aria-pressed',st()[b.dataset.k]===b.dataset.v)); }
+$('#ctrls').addEventListener('input',e=>{ const t=e.target; if(!t.dataset.k) return; const s=st();
+  if(t.type==='range'){ s[t.dataset.k]=parseFloat(t.value); if(mod==='em'){ if(s.r1>s.r2-10) s.r1=s.r2-10; } if(mod==='fd'&&s.ri>s.ro-10) s.ri=s.ro-10; if(mod==='zl'&&s.th2<s.th1+10) s.th2=s.th1+10; }
+  else if(t.type==='checkbox'){ s[t.dataset.k]=t.checked; if(t.dataset.k==='det'){ buildPanel(); } }
+  syncInputs(); update(); });
+$('#ctrls').addEventListener('click',e=>{ const b=e.target.closest('.seg button'); if(!b) return; const s=st(), k=b.dataset.k, v=b.dataset.v; if(s[k]===v) return; s[k]=v;
+  if(mod==='ci'&&k==='modo') s.rot=v==='dif'?'ccw':'cw';
+  if(mod==='zl'&&k==='modo'&&v!=='una'){ if(s.th2<150) s.th2=165; if(s.th1>15) s.th1=12; if(s.a>s.r*.9) s.a=Math.round(s.r*.77); }
+  if(mod==='zl'&&k==='tipo'){ if(v==='ext'&&s.a<=s.r) s.a=Math.round(s.r*1.25); if(v==='int'&&s.a>=s.r) s.a=Math.round(s.r*.73); }
+  if(['modo','tipo'].includes(k)) { buildPanel(); resetCam(); }
+  syncInputs(); update(); });
+
+/* ---------------- lectura, cálculo y estado ---------------- */
+function update(){ const m=M(), s=st(); if(m.fix) m.fix(s); RES=m.compute(s);
+  $('#readout').innerHTML=`<div class="rt">${m.title}</div><dl>${m.readout(s,RES).map(([k,v,key])=>`<dt>${k}</dt><dd${key?' class="key"':''}>${v}</dd>`).join('')}</dl>`;
+  const sb=$('#stateBox'); if(sb){ const [cls,txt]=m.state(s,RES); sb.className='state '+cls; sb.textContent=txt; }
+  const cb=$('#calcBox'); if(cb) cb.innerHTML=m.calc(s,RES).map(x=>`<div class="eq${x.startsWith('<span class="c">')?' c':''}">${x}</div>`).join('');
+  if(m.charts) m.charts(s,RES);
+  draw(); }
+
+/* ---------------- dibujo ---------------- */
+let handlesNow=[], hoverH=-1;
+function draw(){ if(!W||!RES) return; const m=M(), s=st(); fit(m.bbox(s)); clear(); if(!m.nogrid) grid(); m.draw(s,RES);
+  handlesNow=m.handles(s,RES)||[]; handlesNow.forEach((h,i)=>{ const P=S(h.p); ctx.save(); ctx.strokeStyle=C.accent; ctx.lineWidth=2; ctx.setLineDash([3,3]); ctx.beginPath(); ctx.arc(P.x,P.y,i===hoverH?14:11,0,7); ctx.stroke(); ctx.restore(); }); }
+
+/* ---------------- interacción en el lienzo ---------------- */
+let drag=null;
+const pt=e=>{const r=cv.getBoundingClientRect(); return V(e.clientX-r.left,e.clientY-r.top);};
+const hitH=q=>handlesNow.findIndex(h=>hyp(sub(S(h.p),q))<16);
+cv.addEventListener('pointerdown',e=>{ const q=pt(e), h=hitH(q); cv.setPointerCapture(e.pointerId);
+  drag=h>=0?{h}:{pan:true,q,p0:{...cam().pan}}; cv.classList.add('drag'); });
+cv.addEventListener('pointermove',e=>{ const q=pt(e);
+  if(!drag){ const h=hitH(q); if(h!==hoverH){hoverH=h; cv.classList.toggle('over',h>=0); draw();} return; }
+  if(drag.h!==undefined){ handlesNow[drag.h].set(toW(q)); syncInputs(); update(); }
+  else { const k=cam(); k.pan=sub(drag.p0,V((q.x-drag.q.x)/view.s,-(q.y-drag.q.y)/view.s)); draw(); } });
+const endDrag=()=>{drag=null; cv.classList.remove('drag');};
+cv.addEventListener('pointerup',endDrag); cv.addEventListener('pointercancel',endDrag);
+cv.addEventListener('wheel',e=>{ e.preventDefault(); zoomAt(pt(e),e.deltaY<0?1.12:1/1.12); },{passive:false});
+$('#z-in').onclick=()=>zoomAt(V(W/2,H/2),1.25); $('#z-out').onclick=()=>zoomAt(V(W/2,H/2),.8);
+function resetCam(){ const k=cam(); k.z=1; k.pan=V(0,0); syncZoom(); draw(); }
+$('#z-fit').onclick=resetCam;
+let playing=!reduced; const pb=$('#z-play'); const syncPlay=()=>{pb.textContent=playing?'Pausar giro':'Girar'; pb.setAttribute('aria-pressed',playing);}; syncPlay();
+pb.onclick=()=>{playing=!playing; syncPlay();};
+let spin=1; let last=0; function tick(t){ const dt=last?Math.min(50,t-last):16; last=t;
+  if(mod==='zl'&&RES){ const s=st(); if(s.modo==='una'&&s.det&&s.sweep&&playing){ s._dir=s._dir||1; s.thM+=s._dir*dt*.025; if(s.thM>=s.th2){s.thM=s.th2;s._dir=-1;} if(s.thM<=s.th1){s.thM=s.th1;s._dir=1;} syncInputs(); update(); } }
+  if(RES&&mod!=='ca'){ const s=st(), m=M(); const target=(playing&&!(m.stopped&&m.stopped(s,RES)))?1:0; const was=spin; spin+= (target-spin)*Math.min(1,dt*.003); if(Math.abs(spin)<.002&&target===0) spin=0;
+    const sg=mod==='fd'||mod==='em'?-1:rotSign(s); phi+=sg*dt*.0012*spin; if(spin>0||was!==spin) draw(); }
+  requestAnimationFrame(tick); }
+requestAnimationFrame(tick);
+
+/* ---------------- ocultar resultados ---------------- */
+$('#hidebtn').onclick=()=>{ const on=$('#app').classList.toggle('hidevals'); $('#hidebtn').setAttribute('aria-pressed',on); $('#hidebtn').textContent=on?'Mostrar resultados':'Ocultar resultados'; };
+
+/* ---------------- guía de pasos ---------------- */
+const STEP={}; Object.keys(MODS).forEach(k=>STEP[k]=0);
+function renderSteps(){ const L=M().steps||[]; const i=STEP[mod];
+  $('#steps').innerHTML=L.map((s,j)=>`<button type="button" aria-current="${j===i}" aria-label="Paso ${j+1}: ${s.t}" data-step="${j}">${j+1}</button>`).join('');
+  $('#g-title').textContent=L[i]?L[i].t:''; $('#g-text').textContent=L[i]?L[i].p:''; }
+$('#steps').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; const j=+b.dataset.step, L=M().steps; STEP[mod]=j; const sp=L[j];
+  const prevModo=st().modo; Object.assign(st(),sp.set||{}); if(st().modo!==prevModo) resetCam(); buildPanel(); renderSteps(); update();
+  if(sp.flash){ const f=document.querySelector(`#ctrls .field[data-k="${sp.flash}"]`); if(f){ f.classList.remove('flash'); void f.offsetWidth; f.classList.add('flash'); } } });
+
+/* ---------------- módulos ---------------- */
+function go(k){ mod=k; document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.go===k));
+  $('#hint').textContent=M().hint||''; buildPanel(); renderSteps(); syncZoom(); update();
+  try{ localStorage.setItem('frenolab-mod',k); }catch(e){} }
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>go(t.dataset.go));
+let start='zc'; try{ const v=localStorage.getItem('frenolab-mod'); if(v&&MODS[v]) start=v; }catch(e){}
+const hm=location.hash.slice(1); if(MODS[hm]) start=hm;
+window.addEventListener('resize',()=>{ if(M().charts&&RES) M().charts(st(),RES); });
+go(start);
+window.__FL={MODS,STATE,shoeCalc,bandGeo,go,get RES(){return RES;},get spin(){return spin;}};
+})();
+</script>
+</body></html>
