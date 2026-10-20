@@ -584,6 +584,13 @@ input[type=range]::-webkit-slider-runnable-track{background:linear-gradient(to r
           <div class="field"><label for="trn">Velocidad de entrada</label><output id="o-trn"></output><input type="range" id="trn" min="10" max="3000" step="10" value="600"></div>
           <div class="row"><button class="btn primary" id="trplay">Pausar</button></div>
         </div>
+        <div class="sec">
+          <h3>Cargas</h3>
+          <div class="field"><label for="trTs">Par resistente en la salida · T<sub>s</sub></label><output id="o-trTs"></output><input type="range" id="trTs" min="0" max="500" step="1" value="50"></div>
+          <div class="field"><label for="treta">Rendimiento de cada engrane · η</label><output id="o-treta"></output><input type="range" id="treta" min="0.9" max="1" step="0.005" value="0.98"></div>
+          <label class="chk"><input type="checkbox" id="trshow" checked>Pares y fuerzas en el dibujo</label>
+          <p class="cap">La potencia se conserva salvo las pérdidas: T<sub>e</sub>·ω<sub>e</sub>·η<sup>k</sup> = T<sub>s</sub>·ω<sub>s</sub>, con k la cantidad de engranes. Por eso T<sub>e</sub> = T<sub>s</sub>·|Rt| / η<sup>k</sup>: un tren reductor (|Rt| &lt; 1) necesita menos par en la entrada que el que entrega.</p>
+        </div>
       </div>
 
       <!-- ===== LEVAS ===== -->
@@ -1997,7 +2004,7 @@ GR.view='dent';
    MÓDULO · TRENES DE ENGRANAJES (diap. 37–39)
    Rt = n_salida / n_entrada = producto de (−N impulsor / N impulsado) por cada par exterior
    ====================================================================== */
-const TR={type:'simple', cnt:3, N:[20,40,15,30,25], C:[20,40,15,30], n:600, th:0, play:!reduced, m:3};
+const TR={type:'simple', cnt:3, N:[20,40,15,30,25], C:[20,40,15,30], n:600, th:0, play:!reduced, m:3, Ts:50, eta:.98, show:true};
 const TR_COL=()=>[C.b1,C.b2,C.geo,C.hot,C.ink];
 function trMeshNext(thi,Ni,Nj,psi){ return psi+Math.PI-Math.PI/Nj-(thi-psi)*Ni/Nj; }   // fase de la rueda j que engrana con i
 function trLayout(){
@@ -2021,6 +2028,27 @@ function trLayout(){
   g.push({N:N5,r:m*N5/2,O:Cc,th:th5,plane:1,name:'N₅',shaft:2});
   return {g,Rt:(-N2/N3)*(-N4/N5),terms:[`(−${N2}/${N3})`,`(−${N4}/${N5})`],coax:hyp(Cc)<0.01,a1,a2};
 }
+/* cargas: se recorre el tren desde la salida hacia la entrada, sumando las pérdidas de cada engrane */
+function trLoads(L){
+  const g=L.g, simple=TR.type==='simple', nSh=simple?g.length:3, meshes=simple?g.slice(0,-1).map((q,k)=>[k,k+1]):[[0,1],[2,3]];
+  const wIn=TR.n*2*Math.PI/60, wSh=[]; // velocidad de cada eje [rad/s]
+  if(simple){ let w=wIn; g.forEach((q,k)=>{ if(k) w=w*g[k-1].N/q.N; wSh.push(w); }); }
+  else { const [N2,N3,N4,N5]=TR.C; wSh.push(wIn, wIn*N2/N3, wIn*N2/N3*N4/N5); }
+  const k=meshes.length, Pout=TR.Ts*wSh[nSh-1];
+  const down=sh=> simple ? (nSh-1-sh) : (2-sh);           // engranes aguas abajo de cada eje
+  const Tsh=wSh.map((w,sh)=>Pout/Math.pow(TR.eta,down(sh))/w);
+  // fuerza tangencial en cada engrane: par que recibe la rueda impulsada / su radio primitivo
+  // (en una rueda loca es el par equivalente P/ω: la fuerza en su primitiva es la misma que transmite)
+  const Ft=meshes.map(([a,b])=>Tsh[g[b].shaft]/(g[b].r/1000));
+  return {wSh,Tsh,Ft,k,Pout,Pin:Pout/Math.pow(TR.eta,k),Te:Tsh[0],etaT:Math.pow(TR.eta,k),meshes};
+}
+function trTorque(O,r,dir,col,txt){ // par aplicado: flecha curva abajo del eje
+  const P=S(O), R=(r+0.6*TR.m)*view.s+14, a0=0.75, a1=2.4, cw=dir>0;
+  ctx.save(); ctx.strokeStyle=col; ctx.fillStyle=col; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(P.x,P.y,R,a0,a1); ctx.stroke();
+  const ae= cw? a1 : a0, tx=-Math.sin(ae)*(cw?1:-1), ty=Math.cos(ae)*(cw?1:-1), hx=P.x+R*Math.cos(ae), hy=P.y+R*Math.sin(ae);
+  ctx.beginPath(); ctx.moveTo(hx+tx*11,hy+ty*11); ctx.lineTo(hx-ty*6,hy+tx*6); ctx.lineTo(hx+ty*6,hy-tx*6); ctx.closePath(); ctx.fill(); ctx.restore();
+  label(txt,V(P.x,P.y+R+14),col,'center',true);
+}
 function trArrow(O,r,dir,col){ // flecha curva de sentido de giro
   const P=S(O), R=(r+0.6*TR.m)*view.s+10, a0=-2.4, a1=-1.2, cw=dir>0;
   ctx.save(); ctx.strokeStyle=col; ctx.fillStyle=col; ctx.lineWidth=2.4; ctx.beginPath(); ctx.arc(P.x,P.y,R,a0,a1); ctx.stroke();
@@ -2030,7 +2058,13 @@ function trArrow(O,r,dir,col){ // flecha curva de sentido de giro
 function drawTren(){
   const L=trLayout(), g=L.g, m=TR.m, cols=TR_COL();
   const xs=g.flatMap(q=>[q.O.x-q.r-2*m,q.O.x+q.r+2*m]), ys=g.flatMap(q=>[q.O.y-q.r-2*m,q.O.y+q.r+2*m]);
-  fit(Math.min(...xs),Math.min(...ys)-16,Math.max(...xs),Math.max(...ys)+16); clear(); grid();
+  // la lectura ocupa la esquina superior derecha: el dibujo va a su izquierda o debajo, donde quede más grande
+  const x0=Math.min(...xs), x1=Math.max(...xs), y0=Math.min(...ys)-16, y1=Math.max(...ys)+16+(TR.show&&TR.Ts>0?10*m:0);
+  const ro=$('#readout'), vis=W>900&&ro&&ro.offsetParent&&getComputedStyle(ro).display!=='none';
+  let RR=null; if(vis){ const rw=ro.offsetWidth+28, rh=ro.offsetTop+ro.offsetHeight+8, dx=x1-x0, dy=y1-y0;
+    const sL=Math.min((W-rw-32)/dx,(H-32)/dy), sB=Math.min((W-32)/dx,(H-rh-32)/dy), sF=Math.min((W-60)/dx,(H-60)/dy);
+    RR= sL>=sB ? {x:0,y:0,w:W-rw,h:H} : {x:0,y:rh,w:W,h:H-rh}; }
+  fit(x0,y0,x1,y1,null,RR); clear(); grid();
   const order=[...g].sort((a,b)=>a.plane-b.plane);
   for(const q of order){
     const k=g.indexOf(q), P=prof(q.N,m,20*DEG), col=cols[k%cols.length];
@@ -2043,9 +2077,19 @@ function drawTren(){
     label(q.name+' = '+q.N,add(q.O,V(0,q.plane? q.r*0.45 : -q.r*0.45)),col,'center'); dotp(q.O,3.5,C.ink); });
   if(TR.type!=='simple'){ label('entrada',g[0].O,C.ink,'center',false,0,18); label('salida',g[3].O,C.ink,'center',false,0,L.coax?32:18); }
   else { label('entrada',g[0].O,C.ink,'center',false,0,18); label('salida',g[g.length-1].O,C.ink,'center',false,0,18); }
-  trReadout(L);
+  const LD=trLoads(L);
+  if(TR.show && TR.Ts>0){
+    const last=g.length-1, rmax=sh=>Math.max(...g.filter(o=>o.shaft===sh).map(o=>o.r));
+    trTorque(g[0].O,rmax(g[0].shaft),sign[0],C.ink,'Tₑ = '+fmt(LD.Te,1)+' N·m (motor)');
+    trTorque(g[last].O,rmax(g[last].shaft),-sign[last],C.warn,'Tₛ = '+fmt(TR.Ts,0)+' N·m (resistente)');
+    // fuerza tangencial en cada engrane, sobre el punto primitivo de contacto
+    LD.meshes.forEach(([a,b],j)=>{ const qa=g[a], qb=g[b], d=sub(qb.O,qa.O), u=mul(d,1/(hyp(d)||1)), P=add(qa.O,mul(u,qa.r));
+      // fuerza de la impulsora sobre la impulsada: en el sentido de giro de la impulsada en el punto de contacto
+      const len=Math.min(70,16+LD.Ft[j]/Math.max(...LD.Ft)*54); arrow(P,mul(V(u.y,-u.x),sign[b]*len),C.hot,'Fₜ = '+fmt(LD.Ft[j],0)+' N'); dotp(P,3.5,C.hot); });
+  }
+  trReadout(L,LD);
 }
-function trReadout(L){
+function trReadout(L,LD){
   const nOut=TR.n*L.Rt, rows=[
     ['Rt = n salida / n entrada', L.terms.join('·')+' = '+(L.Rt>0?'+':'−')+fmt(Math.abs(L.Rt),3),'key'],
     ['Sentido de la salida', L.Rt>0?'igual al de la entrada':'contrario al de la entrada'],
@@ -2059,6 +2103,15 @@ function trReadout(L){
     rows.push(['Producto impulsoras / impulsadas', `${N2}·${N4} / ${N3}·${N5}`]);
     if(TR.type==='rev') rows.push(['Coaxialidad: N₂ + N₃ = N₄ + N₅', `${N2+N3} ${N2+N3===N4+N5?'=':'≠'} ${N4+N5}`, N2+N3===N4+N5?'':'warn']);
   }
+  if(LD && TR.Ts>0){
+    rows.push(['Par resistente en la salida Tₛ', fmt(TR.Ts,1)+' N·m']);
+    rows.push([`Rendimiento total η<sup>${LD.k}</sup>`, fmt(LD.etaT,3)]);
+    rows.push(['Tₑ = Tₛ·|Rt| / η<sup>'+LD.k+'</sup>', fmt(LD.Te,2)+' N·m','key']);
+    rows.push(['Potencia entrada · salida', fmt(LD.Pin/1000,2)+' · '+fmt(LD.Pout/1000,2)+' kW']);
+    if(TR.type!=='simple') rows.push(['Par en el eje intermedio', fmt(LD.Tsh[1],2)+' N·m']);
+    else if(L.g.length>2) rows.push(['Ruedas locas', 'no cambian el par de entrada: sólo suman pérdidas']);
+    rows.push(['Fₜ en los dientes', LD.Ft.map(f=>fmt(f,0)).join(' · ')+' N']);
+  }
   $('#readout').innerHTML='<div class="rt">Lectura · m = '+fmt(TR.m,0)+' mm</div><dl>'+rows.map(r=>`<dt>${r[0]}</dt><dd class="${r[2]==='key'?'key':''}"${r[2]==='warn'?' style="color:var(--warn)"':''}>${r[1]}</dd>`).join('')+'</dl>';
 }
 function stepTren(dt){ const N0= TR.type==='simple'?TR.N[0]:TR.C[0]; TR.th+= (2*Math.PI/N0)/1.6*dt*Math.min(2,TR.n/600); }
@@ -2070,6 +2123,7 @@ function syncTrUI(){
   for(let k=0;k<4;k++){ $('#trC'+k).value=TR.C[k]; $('#o-trC'+k).textContent=String(TR.C[k]); }
   $('#trfix').hidden= TR.type!=='rev';
   $('#o-trn').textContent=fmt(TR.n,0)+' rpm'; $('#trplay').textContent=TR.play?'Pausar':'Animar';
+  $('#o-trTs').textContent=fmt(TR.Ts,0)+' N·m'; $('#trTs').value=TR.Ts; $('#o-treta').textContent=fmt(TR.eta,3); $('#treta').value=TR.eta; $('#trshow').checked=TR.show;
 }
 ['simple','nrev','rev'].forEach(t=>$('#tr-'+t).onclick=()=>{TR.type=t; if(t==='rev'){ trFix(); } resetView(); syncTrUI(); requestDraw();});
 function trFix(){ const [N2,N3,N4]=TR.C; const n5=N2+N3-N4; if(n5>=10) TR.C[3]=n5; else { TR.C[2]=Math.max(10,Math.round((N2+N3)/3)); TR.C[3]=N2+N3-TR.C[2]; } }
@@ -2079,6 +2133,9 @@ for(let k=0;k<5;k++) $('#trN'+k).addEventListener('input',e=>{TR.N[k]=+e.target.
 for(let k=0;k<4;k++) $('#trC'+k).addEventListener('input',e=>{TR.C[k]=+e.target.value; syncTrUI(); requestDraw();});
 $('#trn').addEventListener('input',e=>{TR.n=+e.target.value; syncTrUI(); requestDraw();});
 $('#trplay').onclick=()=>{TR.play=!TR.play; syncTrUI(); requestDraw();};
+$('#trTs').addEventListener('input',e=>{TR.Ts=+e.target.value; syncTrUI(); requestDraw();});
+$('#treta').addEventListener('input',e=>{TR.eta=+e.target.value; syncTrUI(); requestDraw();});
+$('#trshow').addEventListener('change',e=>{TR.show=e.target.checked; requestDraw();});
 
 /* ======================================================================
    MODO PRÁCTICA Y LECTURA PLEGABLE
